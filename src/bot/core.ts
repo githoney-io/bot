@@ -5,8 +5,12 @@ import chalk from "chalk";
 import z, { ZodError } from "zod";
 import appConfig, { ENDPOINTS } from "../config/app-config";
 import axios from "axios";
+import { bech32 } from "bech32";
+import { NETWORK } from "../utils/constants";
 
 const ONE_ADA_IN_LOVELACE = 1000000;
+const MAINNET_ADDRESS_PREFIX = "addr1";
+const PREPROD_ADDRESS_PREFIX = "addr_test1";
 
 const CONTRACT_ID_REGEX = /^[0-9a-fA-F]{64}#\d+$/;
 const zContractId = z
@@ -19,27 +23,34 @@ const zContractId = z
 const ADDRESS_REGEX = /^(addr1|addr_test1)[0-9a-z]+$/i;
 const zAddress = z
   .string()
-  .length(63)
-  .regex(
-    ADDRESS_REGEX,
-    "Address must be 68 or 103 characters long, bech32 encoding."
-  )
-  .or(
-    z
-      .string()
-      .length(108)
-      .regex(
-        ADDRESS_REGEX,
-        "Address must be 68 or 103 characters long, bech32 encoding."
-      )
+  .regex(ADDRESS_REGEX, "Address must be bech32 encoding.")
+  .refine(
+    (v) => {
+      try {
+        const result = bech32.decode(v, 108);
+        const unwords = bech32.fromWords(result.words);
+        const network = Buffer.from(unwords).toString("hex")[1];
+        return network === "0" || network === "1";
+      } catch (e) {
+        return false;
+      }
+    },
+    {
+      message: "Invalid address for preprod o mainnet network."
+    }
   );
 
 const ATTACH_BOUNTY_RESPONSE_COMMENT = (
   params: AttachBountyParams,
   contractId: string,
-  signUrl: string
+  signUrl: string,
+  network: NETWORK
 ) => `
 ### New bounty created for this issue! 🎊
+${
+  network === NETWORK.PREPROD ? "### This bounty is in the preprod network" : ""
+}
+
 > reward: **${params.amount} ADA**
 > work deadline: **${params.deadline} days**
 > maintainer address: **${params.address.slice(0, 20)}..**
@@ -79,7 +90,8 @@ const AttachBountyParamsSchema = z.object({
   commentId: z.number().nonnegative(),
   amount: z.number().nonnegative().min(10, "Amount must be at least 10 ADA"),
   deadline: z.number().nonnegative().min(6, "Deadline must be at least 6 days"),
-  address: zAddress,
+  network: z.enum([NETWORK.MAINNET, NETWORK.PREPROD]).default(NETWORK.PREPROD),
+  address: zAddress
 });
 
 type AttachBountyParams = z.infer<typeof AttachBountyParamsSchema>;
@@ -89,28 +101,41 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueNumber, commentId, amount, deadline, address } =
+    const { issueNumber, commentId, amount, deadline, address, network } =
       AttachBountyParamsSchema.parse(params);
+    if (network !== appConfig.NETWORK.toLowerCase()) return;
+
+    if (
+      (network === NETWORK.MAINNET &&
+        !address.startsWith(MAINNET_ADDRESS_PREFIX)) ||
+      (network === NETWORK.PREPROD &&
+        !address.startsWith(PREPROD_ADDRESS_PREFIX))
+    ) {
+      throw new ZodError([
+        {
+          code: "custom",
+          path: ["address"],
+          message: "The address does not match the network selected."
+        }
+      ]);
+    }
 
     await github.acknowledgeCommand(commentId);
 
     const deadline_ut = Date.now() + (deadline + 1) * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
-    const { contractId } = await callEp(
-      "createContract",
-      {
-        maintainerAddr: address,
-        depositAmount: amountADA,
-        releaseDeadline: deadline_ut,
-      }
-    );
+    const { contractId } = await callEp("createContract", {
+      maintainerAddr: address,
+      depositAmount: amountADA,
+      releaseDeadline: deadline_ut
+    });
 
-    const signUrl = getSignUrl("deposit", contractId, address)
+    const signUrl = getSignUrl("deposit", contractId, address);
 
     await github.replyToCommand(
       issueNumber,
-      ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl)
+      ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
     );
   } catch (e) {
     if (e instanceof ZodError) {
@@ -129,7 +154,7 @@ const AcceptBountyParamsSchema = z.object({
   issueNumber: z.number().nonnegative(),
   commentId: z.number().nonnegative(),
   contractId: zContractId,
-  address: zAddress,
+  address: zAddress
 });
 
 type AcceptBountyParams = z.infer<typeof AcceptBountyParamsSchema>;
@@ -147,7 +172,7 @@ export async function acceptBounty(
     const { txId } = await callEp("assignDeveloper", {
       contractId: contractId,
       devAddr: address,
-      issueNumber: issueNumber,
+      issueNumber: issueNumber
     });
 
     const txUrl = `https://preprod.cexplorer.io/tx/`;
@@ -173,7 +198,7 @@ const reclaimBountyParamsSchema = z.object({
   issueNumber: z.number().nonnegative(),
   commentId: z.number().nonnegative(),
   contractId: zContractId,
-  address: zAddress,
+  address: zAddress
 });
 
 type ReclaimBountyParams = z.infer<typeof reclaimBountyParamsSchema>;
@@ -188,7 +213,7 @@ export async function reclaimBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const signUrl = getSignUrl("withdraw",contractId, address);
+    const signUrl = getSignUrl("withdraw", contractId, address);
 
     await github.replyToCommand(
       issueNumber,
@@ -212,7 +237,6 @@ export type FulfillBountyParams = {
   contractId: string;
   address: string;
 };
-
 
 export async function handleComment(
   github: GithubFacade,
@@ -250,6 +274,7 @@ export async function handleComment(
           amount: parsed.amount,
           deadline: parsed.deadline,
           address: parsed.address,
+          network: parsed.network
         },
         github
       );
@@ -260,7 +285,7 @@ export async function handleComment(
           issueNumber: issue.number,
           commentId: comment.id,
           contractId: parsed.contract,
-          address: parsed.address,
+          address: parsed.address
         },
         github
       );
@@ -271,7 +296,7 @@ export async function handleComment(
           issueNumber: issue.number,
           commentId: comment.id,
           contractId: parsed.contract,
-          address: parsed.address,
+          address: parsed.address
         },
         github
       );
@@ -281,14 +306,10 @@ export async function handleComment(
   }
 }
 
-export async function handlePRMerged(
-  github: GithubFacade,
-  pr: PullRequest
-) {
-
+export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
   try {
     const { contractId, devAddr } = await callEp("unlockPayment", {
-      prNumber: pr.number,
+      prNumber: pr.number
     });
 
     const signUrl = getSignUrl("withdraw", contractId, devAddr);
@@ -302,13 +323,11 @@ export async function handlePRMerged(
   }
 }
 
-export async function handlePRClosed(
-  github: GithubFacade,
-  pr: PullRequest
-) {
-
+export async function handlePRClosed(github: GithubFacade, pr: PullRequest) {
   try {
-    const { contractId, txId } = await callEp("cancelBounty", {prNumber: pr.number})
+    const { contractId, txId } = await callEp("cancelBounty", {
+      prNumber: pr.number
+    });
 
     const txUrl = `https://preprod.cexplorer.io/tx/`;
 
@@ -316,14 +335,10 @@ export async function handlePRClosed(
       pr.number,
       `Cancelling contract with ID **${contractId}**. You can see the cancel transaction in this [link](${txUrl}${txId})`
     );
-
-
   } catch (e) {
     console.error(chalk.red(`Error cancelling contract: ${e}`));
   }
-
 }
-
 
 const callEp = async (name: string, param: any): Promise<any> => {
   return axios.post(ENDPOINTS[name], param).then((response) => {
@@ -334,7 +349,7 @@ const callEp = async (name: string, param: any): Promise<any> => {
   });
 };
 
-const getSignUrl = (operation: string, contractId:string, address:string) => {
+const getSignUrl = (operation: string, contractId: string, address: string) => {
   const cid = contractId.replace("#", "%23");
   return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
-}
+};
