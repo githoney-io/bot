@@ -88,7 +88,7 @@ const paramsValidationFail = async (
 const AttachBountyParamsSchema = z.object({
   issueNumber: z.number().nonnegative(),
   commentId: z.number().nonnegative(),
-  amount: z.number().nonnegative().min(1, "Amount must be at least 10 ADA"),
+  amount: z.number().nonnegative().min(10, "Amount must be at least 10 ADA"),
   deadline: z.number().nonnegative().min(6, "Deadline must be at least 6 days"),
   network: z.enum([NETWORK.MAINNET, NETWORK.PREPROD]).default(NETWORK.PREPROD),
   address: zAddress
