@@ -2,7 +2,6 @@ import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue, PullRequest } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import chalk from "chalk";
-import { ZodError } from "zod";
 import { AxiosError } from "axios";
 import { ONE_ADA_IN_LOVELACE } from "./utils/constants";
 import {
