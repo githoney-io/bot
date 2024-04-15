@@ -5,7 +5,6 @@ import { App } from "octokit";
 
 import { handleComment, handlePRClosed, handlePRMerged } from "./core";
 
-
 export class GithubFacade {
   octokit: Octokit;
   owner: string;
@@ -22,7 +21,7 @@ export class GithubFacade {
       owner: this.owner,
       repo: this.repo,
       comment_id: commentId,
-      content: "+1",
+      content: "+1"
     });
   }
 
@@ -31,7 +30,7 @@ export class GithubFacade {
       owner: this.owner,
       repo: this.repo,
       comment_id: commentId,
-      content: "-1",
+      content: "-1"
     });
   }
 
@@ -40,7 +39,7 @@ export class GithubFacade {
       owner: this.owner,
       repo: this.repo,
       issue_number: issueNumber,
-      body,
+      body
     });
   }
 
@@ -48,7 +47,7 @@ export class GithubFacade {
     let comments = await this.octokit.rest.issues.listComments({
       owner: this.owner,
       repo: this.repo,
-      issue_number: issueNumber,
+      issue_number: issueNumber
     });
 
     return comments.data;
@@ -63,13 +62,12 @@ export type BotParams = {
 };
 
 export function startBot(params: BotParams) {
-
   const app = new App({
     appId: params.githubAppId,
     privateKey: params.githubPrivateKey,
     webhooks: {
-      secret: params.webhookSecret,
-    },
+      secret: params.webhookSecret
+    }
   });
 
   app.webhooks.on("issue_comment.created", async ({ payload }) => {
@@ -88,11 +86,7 @@ export function startBot(params: BotParams) {
       payload.repository.name
     );
 
-    await handleComment(
-      facade,
-      payload.issue,
-      payload.comment,
-    );
+    await handleComment(facade, payload.issue, payload.comment);
   });
 
   app.webhooks.on("pull_request.closed", async ({ payload }) => {
@@ -128,12 +122,12 @@ export function startBot(params: BotParams) {
         id: webhookEvent["x-request-id"],
         name: webhookEvent["x-github-event"],
         signature: webhookEvent["x-hub-signature"],
-        payload: JSON.stringify(webhookEvent.body),
+        payload: JSON.stringify(webhookEvent.body)
       })
       .catch(console.error);
   };
 
   return createNodeMiddleware(app.webhooks, {
-    path: "/webhook",
+    path: "/webhook"
   });
 }
