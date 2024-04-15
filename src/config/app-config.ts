@@ -18,7 +18,7 @@ const appConfig: AppConfig = {
     process.env.GITHUB_PRIVATE_KEY_PATH || "githubapp.pem",
   GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET || "donotuseinprod",
   GITHUB_APP_ID: process.env.GITHUB_APP_ID || "406519",
-  NETWORK: process.env.NETWORK || "Preprod",
+  NETWORK: process.env.NETWORK || "preprod",
   PUBLIC_URL:
     process.env.PUBLIC_URL ||
     `http://localhost:${parseInt(process.env.PORT!) || 3000}`,
@@ -26,13 +26,5 @@ const appConfig: AppConfig = {
     process.env.WEBHOOK_PROXY_URL || "https://smee.io/N9gchHnEoXXDt",
 };
 
-export const ENDPOINTS: { [index: string]: any } = {
-  createContract: `${appConfig.PUBLIC_URL}/createContract`,
-  depositPayment: `${appConfig.PUBLIC_URL}/depositPayment`,
-  assignDeveloper: `${appConfig.PUBLIC_URL}/assignDeveloper`,
-  unlockPayment: `${appConfig.PUBLIC_URL}/unlockPayment`,
-  withdrawPayment: `${appConfig.PUBLIC_URL}/withdrawPayment`,
-  cancelBounty: `${appConfig.PUBLIC_URL}/cancelBounty`,
-};
 
 export default appConfig;

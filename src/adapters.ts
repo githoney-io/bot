@@ -4,7 +4,6 @@ import EventSource from "eventsource";
 import { App } from "octokit";
 
 import { handleComment, handlePRClosed, handlePRMerged } from "./core";
-import { AppConfig } from "../config/app-config";
 
 
 export class GithubFacade {
@@ -63,7 +62,7 @@ export type BotParams = {
   githubPrivateKey: string;
 };
 
-export function startBot(params: BotParams, appConfig: AppConfig) {
+export function startBot(params: BotParams) {
 
   const app = new App({
     appId: params.githubAppId,
@@ -93,7 +92,6 @@ export function startBot(params: BotParams, appConfig: AppConfig) {
       facade,
       payload.issue,
       payload.comment,
-      appConfig,
     );
   });
 

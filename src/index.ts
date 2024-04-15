@@ -1,5 +1,5 @@
 import createServer from "./config/express";
-import { startBot } from "./bot";
+import { startBot } from "./adapters";
 import appConfig from "./config/app-config";
 import fs from "fs";
 
@@ -14,8 +14,7 @@ let webhooks = startBot(
       appConfig.GITHUB_PRIVATE_KEY_PATH,
       "utf8"
     ),
-  },
-  appConfig
+  }
 );
 
 const startServer = async () => {

@@ -3,10 +3,10 @@ import type { IssueComment, Issue, PullRequest } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import chalk from "chalk";
 import z, { ZodError } from "zod";
-import appConfig, { ENDPOINTS } from "../config/app-config";
+import appConfig from "./config/app-config";
 import axios from "axios";
 import { bech32 } from "bech32";
-import { NETWORK } from "../utils/constants";
+import { NETWORK } from "./utils/constants";
 
 const ONE_ADA_IN_LOVELACE = 1000000;
 const MAINNET_ADDRESS_PREFIX = "addr1";
@@ -88,7 +88,7 @@ const paramsValidationFail = async (
 const AttachBountyParamsSchema = z.object({
   issueNumber: z.number().nonnegative(),
   commentId: z.number().nonnegative(),
-  amount: z.number().nonnegative().min(10, "Amount must be at least 10 ADA"),
+  amount: z.number().nonnegative().min(1, "Amount must be at least 10 ADA"),
   deadline: z.number().nonnegative().min(6, "Deadline must be at least 6 days"),
   network: z.enum([NETWORK.MAINNET, NETWORK.PREPROD]).default(NETWORK.PREPROD),
   address: zAddress
@@ -103,22 +103,7 @@ export async function attachBounty(
   try {
     const { issueNumber, commentId, amount, deadline, address, network } =
       AttachBountyParamsSchema.parse(params);
-    if (network !== appConfig.NETWORK.toLowerCase()) return;
-
-    if (
-      (network === NETWORK.MAINNET &&
-        !address.startsWith(MAINNET_ADDRESS_PREFIX)) ||
-      (network === NETWORK.PREPROD &&
-        !address.startsWith(PREPROD_ADDRESS_PREFIX))
-    ) {
-      throw new ZodError([
-        {
-          code: "custom",
-          path: ["address"],
-          message: "The address does not match the network selected."
-        }
-      ]);
-    }
+    checkAddressAndNetwork(address, network);
 
     await github.acknowledgeCommand(commentId);
 
@@ -166,6 +151,7 @@ export async function acceptBounty(
   try {
     const { issueNumber, commentId, contractId, address } =
       AcceptBountyParamsSchema.parse(params);
+    checkAddressAndNetwork(address, appConfig.NETWORK);
 
     await github.acknowledgeCommand(commentId);
 
@@ -210,6 +196,7 @@ export async function reclaimBounty(
   try {
     const { issueNumber, commentId, contractId, address } =
       AcceptBountyParamsSchema.parse(params);
+    checkAddressAndNetwork(address, appConfig.NETWORK);
 
     await github.acknowledgeCommand(commentId);
 
@@ -243,14 +230,14 @@ export async function handleComment(
   issue: Issue,
   comment: IssueComment
 ) {
-  const commentBody = comment.body;
+  const commentBody = comment.body.trim();
 
   if (!commentBody.includes("/githoney")) {
     console.debug("skipping because not directed to bot");
     return;
   }
 
-  let args = comment.body
+  let args = commentBody
     .split(" ")
     .slice(1)
     .filter((arg) => arg !== "");
@@ -311,6 +298,7 @@ export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
     const { contractId, devAddr } = await callEp("unlockPayment", {
       prNumber: pr.number
     });
+    checkAddressAndNetwork(devAddr, appConfig.NETWORK);
 
     const signUrl = getSignUrl("withdraw", contractId, devAddr);
 
@@ -340,8 +328,9 @@ export async function handlePRClosed(github: GithubFacade, pr: PullRequest) {
   }
 }
 
+
 const callEp = async (name: string, param: any): Promise<any> => {
-  return axios.post(ENDPOINTS[name], param).then((response) => {
+  return axios.post(`${appConfig.PUBLIC_URL}/${name}`, param).then((response) => {
     if (response.status === 200) {
       return response.data;
     }
@@ -353,3 +342,22 @@ const getSignUrl = (operation: string, contractId: string, address: string) => {
   const cid = contractId.replace("#", "%23");
   return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
 };
+
+const checkAddressAndNetwork = (address: string, network: string) => {
+  if (network !== appConfig.NETWORK.toLowerCase()) throw new Error("Network mismatch");
+
+  if (
+    (network === NETWORK.MAINNET &&
+      !address.startsWith(MAINNET_ADDRESS_PREFIX)) ||
+    (network === NETWORK.PREPROD &&
+      !address.startsWith(PREPROD_ADDRESS_PREFIX))
+  ) {
+    throw new ZodError([
+      {
+        code: "custom",
+        path: ["address"],
+        message: "The address does not match the network selected."
+      }
+    ]);
+  }
+}
