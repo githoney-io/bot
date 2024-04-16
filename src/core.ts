@@ -153,24 +153,22 @@ export async function acceptBounty(
       `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. The claim token has been sent to address ${address}. See tx at ${txUrl}${txId}. Holder of the token will be able to claim the reward once this PR gets merged.`
     );
   } catch (e) {
-    if (e instanceof AxiosError) {
-      if (e.response?.status === 400) {
-        // If the error is a 400, it means that the validation failed
-        await paramsValidationFail(
-          github,
-          params.issueNumber,
-          params.commentId,
-          e.response?.data.error
-        );
-      } else if (e.response?.status === 404) {
-        // If the error is a 404, it means that the client typed an
-        // invalid contract ID or the address is in the wrong network
-        await github.rejectCommand(params.commentId);
-        await github.replyToCommand(
-          params.issueNumber,
-          "The contract ID provided does not exist or you typed an address in the wrong network."
-        );
-      }
+    if (e instanceof AxiosError && e.response?.status === 400) {
+      // If the error is a 400, it means that the validation failed
+      await paramsValidationFail(
+        github,
+        params.issueNumber,
+        params.commentId,
+        e.response?.data.error
+      );
+    } else if (e instanceof AxiosError && e.response?.status === 404) {
+      // If the error is a 404, it means that the client typed an
+      // invalid contract ID or the address is in the wrong network
+      await github.rejectCommand(params.commentId);
+      await github.replyToCommand(
+        params.issueNumber,
+        "The contract ID provided does not exist or you typed an address in the wrong network."
+      );
     } else {
       await github.replyToCommand(
         params.issueNumber,
@@ -197,6 +195,10 @@ export async function reclaimBounty(
       `Reclaiming bounty from contract with ID **${contractId}**. Maintainer with address **${address}** may reclaim the bounty using this [link](${signUrl})`
     );
   } catch (e) {
+    await github.replyToCommand(
+      params.issueNumber,
+      "There was an error reclaiming funds. Please try again."
+    );
     console.error(chalk.red(`Error reclaiming funds from contract: ${e}`));
   }
 }
