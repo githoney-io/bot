@@ -101,7 +101,8 @@ export async function attachBounty(
     const { contractId } = await callEp("createContract", {
       address,
       amount: amountADA,
-      deadline: deadline_ut
+      deadline: deadline_ut,
+      network
     });
 
     const signUrl = getSignUrl("deposit", contractId, address);
