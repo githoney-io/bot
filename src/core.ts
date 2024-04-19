@@ -100,6 +100,7 @@ export async function attachBounty(
 
     const { contractId } = await callEp("createContract", {
       address,
+      network,
       amount: amountADA,
       deadline: deadline_ut,
       network
