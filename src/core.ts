@@ -15,6 +15,7 @@ import {
   getSignUrl,
   paramsValidationFail
 } from "./helpers";
+import appConfig from "./config/app-config";
 
 export async function handleComment(
   github: GithubFacade,
@@ -48,6 +49,7 @@ export async function handleComment(
       await attachBounty(
         {
           issueNumber: issue.number,
+          issueUrl: issue.html_url,
           commentId: comment.id,
           amount: parsed.amount,
           deadline: parsed.deadline,
@@ -90,28 +92,49 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueNumber, commentId, amount, deadline, address, network } =
-      params;
+    const {
+      issueNumber,
+      issueUrl,
+      commentId,
+      amount,
+      deadline,
+      address,
+      network
+    } = params;
 
     await github.acknowledgeCommand(commentId);
 
     const deadline_ut = Date.now() + (deadline + 1) * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
-    const { contractId } = await callEp("createContract", {
-      address,
-      network,
-      amount: amountADA,
-      deadline: deadline_ut,
-      network
-    });
+    // const { contractId } = await callEp("createContract", {
+    //   address,
+    //   network,
+    //   amount: amountADA,
+    //   deadline: deadline_ut
+    // });
 
-    const signUrl = getSignUrl("deposit", contractId, address);
+    // const signUrl = getSignUrl("deposit", contractId, address);
 
-    await github.replyToCommand(
-      issueNumber,
-      ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
-    );
+    // await github.replyToCommand(
+    //   issueNumber,
+    //   ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
+    // );
+
+    const twBotRoute = "newBounty";
+    callEp(
+      twBotRoute,
+      {
+        linkToIssue: issueUrl,
+        amount,
+        // deadline: new Date(deadline_ut).toISOString(),
+        contractHash: "someHashContract"
+        // contractHash: contractId
+      },
+      appConfig.TW_BOT_URL
+    )
+      .then((response) => console.log(response))
+      .catch((_e) => console.error("Tweet bot error"));
   } catch (e: any) {
     if (e instanceof AxiosError && e.response?.status === 400) {
       // If the error is a 400, it means that the validation failed
