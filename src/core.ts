@@ -16,6 +16,7 @@ import {
   paramsValidationFail
 } from "./helpers";
 import appConfig from "./config/app-config";
+import jwt from "jsonwebtoken";
 
 export async function handleComment(
   github: GithubFacade,
@@ -121,20 +122,27 @@ export async function attachBounty(
     //   ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
     // );
 
+    const token = jwt.sign(
+      { GitHubBot: "I'm the GitHubBot" },
+      appConfig.TW_SECRET_KEY
+    );
+    const headers = { authorization: token };
+
     const twBotRoute = "newBounty";
     callEp(
       twBotRoute,
       {
         linkToIssue: issueUrl,
         amount,
-        // deadline: new Date(deadline_ut).toISOString(),
+        deadline: new Date(deadline_ut).toISOString(),
         contractHash: "someHashContract"
         // contractHash: contractId
       },
-      appConfig.TW_BOT_URL
+      appConfig.TW_BOT_URL,
+      headers
     )
       .then((response) => console.log(response))
-      .catch((_e) => console.error("Tweet bot error"));
+      .catch((_e) => console.error("Tweet bot error", _e));
   } catch (e: any) {
     if (e instanceof AxiosError && e.response?.status === 400) {
       // If the error is a 400, it means that the validation failed

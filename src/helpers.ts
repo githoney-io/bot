@@ -60,14 +60,17 @@ const getSignUrl = (operation: string, contractId: string, address: string) => {
 const callEp = async (
   name: string,
   param: any,
-  url: string = appConfig.PUBLIC_URL
+  url: string = appConfig.PUBLIC_URL,
+  headers: Record<string, any> = {}
 ): Promise<any> => {
-  return axios.post(`${url}/${name}`, param).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    throw response;
-  });
+  return axios
+    .post(`${url}/${name}`, param, { headers: headers })
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      }
+      throw response;
+    });
 };
 
 export {
