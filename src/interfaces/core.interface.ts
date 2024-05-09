@@ -1,9 +1,8 @@
-import { z } from "zod";
-import { bech32 } from "bech32";
 import { NETWORK } from "../utils/constants";
 
 interface AttachBountyParams {
   issueNumber: number;
+  issueUrl: string;
   commentId: number;
   amount: number;
   deadline: number;

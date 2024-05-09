@@ -57,9 +57,14 @@ const getSignUrl = (operation: string, contractId: string, address: string) => {
   return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
 };
 
-const callEp = async (name: string, param: any): Promise<any> => {
+const callEp = async (
+  name: string,
+  param: any,
+  url: string = appConfig.PUBLIC_URL,
+  headers: Record<string, any> = {}
+): Promise<any> => {
   return axios
-    .post(`${appConfig.PUBLIC_URL}/${name}`, param)
+    .post(`${url}/${name}`, param, { headers: headers })
     .then((response) => {
       if (response.status === 200) {
         return response.data;
