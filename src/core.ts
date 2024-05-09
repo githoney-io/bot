@@ -87,7 +87,7 @@ export async function handleComment(
   }
 }
 
-// Calls to {PUBLIC_URL}/createContract
+// Calls to {PUBLIC_URL}/bounty (POST)
 export async function attachBounty(
   params: AttachBountyParams,
   github: GithubFacade
@@ -108,19 +108,22 @@ export async function attachBounty(
     const deadline_ut = Date.now() + (deadline + 1) * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
-    // const { contractId } = await callEp("createContract", {
-    //   address,
-    //   network,
-    //   amount: amountADA,
-    //   deadline: deadline_ut
-    // });
+    // For the moment this is a mock call, the response will be OK
+    // The endpoint 'bounty' is the future real endpoint
+    // The params may change in the future
+    await callEp("bounty", {
+      address,
+      network,
+      amountADA,
+      deadline_ut
+    });
 
-    // const signUrl = getSignUrl("deposit", contractId, address);
-
-    // await github.replyToCommand(
-    //   issueNumber,
-    //   ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
-    // );
+    // TODO: change the message when the endpoint is ready
+    await github.replyToCommand(
+      issueNumber,
+      "The backend is unavailable at the moment"
+      //   ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
+    );
 
     const token = jwt.sign(
       { GitHubBot: "I'm the GitHubBot" },
@@ -162,7 +165,7 @@ export async function attachBounty(
   }
 }
 
-// Calls to {PUBLIC_URL}/assignDeveloper
+// Calls to {PUBLIC_URL}/bounty/assign (POST)
 export async function acceptBounty(
   params: AcceptBountyParams,
   github: GithubFacade
@@ -172,18 +175,19 @@ export async function acceptBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const { txId } = await callEp("assignDeveloper", {
+    await callEp("bounty/assign", {
       contractId,
       address,
       issueNumber
     });
 
     // TODO: handle this with the corresponding network
-    const txUrl = `https://preprod.cexplorer.io/tx/`;
+    // const txUrl = `https://preprod.cexplorer.io/tx/`;
 
     await github.replyToCommand(
       issueNumber,
-      `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. The claim token has been sent to address ${address}. See tx at ${txUrl}${txId}. Holder of the token will be able to claim the reward once this PR gets merged.`
+      "The backend is unavailable at the moment"
+      // `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. The claim token has been sent to address ${address}. See tx at ${txUrl}${txId}. Holder of the token will be able to claim the reward once this PR gets merged.`
     );
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -236,18 +240,19 @@ export async function reclaimBounty(
   }
 }
 
-// Calls to {PUBLIC_URL}/unlockPayment
+// Calls to {PUBLIC_URL}/bounty/merge (POST)
 export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
   try {
-    const { contractId, devAddr } = await callEp("unlockPayment", {
+    await callEp("bounty/merge", {
       prNumber: pr.number
     });
 
-    const signUrl = getSignUrl("withdraw", contractId, devAddr);
+    // const signUrl = getSignUrl("withdraw", contractId, devAddr);
 
     await github.replyToCommand(
       pr.number,
-      `Congrats! By merging this PR the bounty for contract ${contractId} has been unlocked. Use this [link](${signUrl}) to claim the reward.`
+      "The backend is unavailable at the moment"
+      // `Congrats! By merging this PR the bounty for contract ${contractId} has been unlocked. Use this [link](${signUrl}) to claim the reward.`
     );
   } catch (e) {
     await github.replyToCommand(
@@ -258,10 +263,10 @@ export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
   }
 }
 
-// Calls to {PUBLIC_URL}/cancelBounty
+// Calls to {PUBLIC_URL}/bounty/cancel (POST)
 export async function handlePRClosed(github: GithubFacade, pr: PullRequest) {
   try {
-    const { contractId, txId } = await callEp("cancelBounty", {
+    await callEp("bounty/cancel", {
       prNumber: pr.number
     });
 
@@ -269,7 +274,8 @@ export async function handlePRClosed(github: GithubFacade, pr: PullRequest) {
 
     await github.replyToCommand(
       pr.number,
-      `Cancelling contract with ID **${contractId}**. You can see the cancel transaction in this [link](${txUrl}${txId})`
+      "The backend is unavailable at the moment"
+      // `Cancelling contract with ID **${contractId}**. You can see the cancel transaction in this [link](${txUrl}${txId})`
     );
   } catch (e) {
     await github.replyToCommand(
