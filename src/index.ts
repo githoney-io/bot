@@ -2,16 +2,20 @@ import createServer from "./config/express";
 import { startBot } from "./adapters";
 import appConfig from "./config/app-config";
 import fs from "fs";
-import figlet from "figlet";
 
 const PORT = appConfig.PORT;
 
-let webhooks = startBot({
-  webhookProxyUrl: appConfig.WEBHOOK_PROXY_URL,
-  webhookSecret: appConfig.GITHUB_WEBHOOK_SECRET,
-  githubAppId: appConfig.GITHUB_APP_ID,
-  githubPrivateKey: fs.readFileSync(appConfig.GITHUB_PRIVATE_KEY_PATH, "utf8")
-});
+let webhooks = startBot(
+  {
+    webhookProxyUrl: appConfig.WEBHOOK_PROXY_URL,
+    webhookSecret: appConfig.GITHUB_WEBHOOK_SECRET,
+    githubAppId: appConfig.GITHUB_APP_ID,
+    githubPrivateKey: fs.readFileSync(
+      appConfig.GITHUB_PRIVATE_KEY_PATH,
+      "utf8"
+    ),
+  }
+);
 
 const startServer = async () => {
   const app = createServer();
@@ -26,7 +30,7 @@ const startServer = async () => {
       let res = { error: e };
       if (e.includes("TranslationLogicMissingInput")) {
         res = {
-          error: "Input missing. Please wait a few seconds and try again."
+          error: "Input missing. Please wait a few seconds and try again.",
         };
       }
       console.log(res);
@@ -35,8 +39,7 @@ const startServer = async () => {
   });
 
   app.listen(PORT, () => {
-    console.log(figlet.textSync("GITHONEY BOT", { font: "Small Keyboard" }));
-    console.log(`\nBot is running! 🤖\n`);
+    console.log(`Server is running at http://localhost:${PORT}`);
   });
 };
 
