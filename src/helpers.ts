@@ -1,12 +1,13 @@
 import axios from "axios";
 import appConfig from "./config/app-config";
-import { AttachBountyParams } from "./interfaces/core.interface";
+import { ContractInfo } from "./interfaces/core.interface";
 import { NETWORK } from "./utils/constants";
 import { GithubFacade } from "./adapters";
 import { ZodError } from "zod";
+import { StatusCodes } from "http-status-codes";
 
 const ATTACH_BOUNTY_RESPONSE_COMMENT = (
-  params: AttachBountyParams,
+  params: ContractInfo,
   contractId: string,
   signUrl: string,
   network: NETWORK
@@ -18,9 +19,9 @@ const ATTACH_BOUNTY_RESPONSE_COMMENT = (
       : ""
   }
   
-  > reward: **${params.amount} ADA**
-  > work deadline: **${params.deadline} days**
-  > maintainer address: **${params.address.slice(0, 20)}..**
+  > Reward: **${params.amount} ADA**
+  > Work deadline: **${new Date(params.deadline).toUTCString()}**
+  > Maintainer address: **${params.address.slice(0, 20)}..**
   
   The contract id is \`${contractId}\`
   
@@ -66,7 +67,10 @@ const callEp = async (
   return axios
     .post(`${url}/${name}`, param, { headers: headers })
     .then((response) => {
-      if (response.status === 200) {
+      if (
+        response.status >= StatusCodes.OK &&
+        response.status < StatusCodes.MULTIPLE_CHOICES
+      ) {
         return response.data;
       }
       throw response;

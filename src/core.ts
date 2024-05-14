@@ -17,6 +17,7 @@ import {
 } from "./helpers";
 import appConfig from "./config/app-config";
 import jwt from "jsonwebtoken";
+import { IBountyCreate } from "./interfaces/bounty.interface";
 
 export async function handleComment(
   github: GithubFacade,
@@ -39,7 +40,7 @@ export async function handleComment(
   let parsed = minimist(args);
   console.debug(parsed);
 
-  if (parsed._.length == 0) {
+  if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
     github.rejectCommand(comment.id);
     return;
@@ -47,18 +48,22 @@ export async function handleComment(
 
   switch (parsed._[0]) {
     case "attach-bounty":
-      await attachBounty(
-        {
-          issueNumber: issue.number,
-          issueUrl: issue.html_url,
-          commentId: comment.id,
-          amount: parsed.amount,
-          deadline: parsed.deadline,
-          address: parsed.address,
-          network: parsed.network
-        },
-        github
-      );
+      const issueInfo = {
+        creator: issue.user,
+        number: issue.number,
+        title: issue.title,
+        description: issue.body || "",
+        link: issue.html_url,
+        source: "GitHub"
+      };
+      const contractInfo = {
+        amount: parsed.amount,
+        deadline: parsed.deadline,
+        address: parsed.address,
+        network: parsed.network
+      };
+      const commentId = comment.id;
+      await attachBounty({ issueInfo, contractInfo, commentId }, github);
       break;
     case "accept-bounty":
       await acceptBounty(
@@ -87,42 +92,55 @@ export async function handleComment(
   }
 }
 
-// Calls to {PUBLIC_URL}/bounty (POST)
+// Calls to {BACKEND}/bounty (POST)
 export async function attachBounty(
   params: AttachBountyParams,
   github: GithubFacade
 ) {
   try {
+    const { issueInfo, contractInfo, commentId } = params;
     const {
-      issueNumber,
-      issueUrl,
-      commentId,
-      amount,
-      deadline,
-      address,
-      network
-    } = params;
+      creator,
+      description,
+      link: issueUrl,
+      number: issueNumber,
+      source,
+      title
+    } = issueInfo;
+    const { amount, deadline, address, network } = contractInfo;
 
     await github.acknowledgeCommand(commentId);
 
-    const deadline_ut = Date.now() + (deadline + 1) * 24 * 60 * 60 * 1000;
+    const deadline_ut = Date.now() + deadline * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
-    // For the moment this is a mock call, the response will be OK
-    // The endpoint 'bounty' is the future real endpoint
-    // The params may change in the future
-    await callEp("bounty", {
+    const {
+      data: { bounty }
+    }: IBountyCreate = await callEp("bounty", {
+      title,
+      description,
+      url: issueUrl,
+      amount: amountADA,
+      deadline: deadline_ut,
+      creator: {
+        login: creator.login,
+        id: creator.id,
+        email: creator.email,
+        avatarUrl: creator.avatar_url
+      },
       address,
-      network,
-      amountADA,
-      deadline_ut
+      network: network.toLowerCase(),
+      source: source.toLowerCase()
     });
 
-    // TODO: change the message when the endpoint is ready
     await github.replyToCommand(
       issueNumber,
-      "The backend is unavailable at the moment"
-      //   ATTACH_BOUNTY_RESPONSE_COMMENT(params, contractId, signUrl, network)
+      `##This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
+        { ...contractInfo, deadline: deadline_ut },
+        "someHashContract",
+        "someSignUrl",
+        network
+      )}`
     );
 
     const token = jwt.sign(
@@ -139,7 +157,6 @@ export async function attachBounty(
         amount,
         deadline: new Date(deadline_ut).toISOString(),
         contractHash: "someHashContract"
-        // contractHash: contractId
       },
       appConfig.TW_BOT_URL,
       headers
@@ -151,13 +168,13 @@ export async function attachBounty(
       // If the error is a 400, it means that the validation failed
       await paramsValidationFail(
         github,
-        params.issueNumber,
+        params.issueInfo.number,
         params.commentId,
         e.response?.data.error
       );
     } else {
       await github.replyToCommand(
-        params.issueNumber,
+        params.issueInfo.number,
         "There was an error creating the contract. Please try again."
       );
       console.error(chalk.red(`Error creating contract. ${e}`));
