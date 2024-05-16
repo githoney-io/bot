@@ -133,7 +133,7 @@ export async function attachBounty(
       amount: amountADA,
       deadline: deadline_ut,
       creator: {
-        login: creator.login,
+        username: creator.login,
         id: creator.id,
         email: creator.email,
         avatarUrl: creator.avatar_url
