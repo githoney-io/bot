@@ -10,6 +10,7 @@ import {
   ReclaimBountyParams
 } from "./interfaces/core.interface";
 import {
+  ALREADY_EXISTING_BOUNTY,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
   getSignUrl,
@@ -181,6 +182,11 @@ export async function attachBounty(
         params.issueInfo.number,
         params.commentId,
         e.response?.data.error
+      );
+    } else if (e instanceof AxiosError && e.response?.status === 412) {
+      await github.replyToCommand(
+        params.issueInfo.number,
+        ALREADY_EXISTING_BOUNTY
       );
     } else {
       await github.replyToCommand(

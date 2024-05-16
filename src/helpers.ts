@@ -6,6 +6,12 @@ import { GithubFacade } from "./adapters";
 import { ZodError } from "zod";
 import { StatusCodes } from "http-status-codes";
 
+const ALREADY_EXISTING_BOUNTY = `
+  ### ⚠️ Warning ⚠️
+
+  This issue already has a bounty attached.
+`;
+
 const ISSUE_WITHOUT_LABELS = `
   ### ⚠️ Warning ⚠️
 
@@ -82,6 +88,7 @@ const callEp = async (
 };
 
 export {
+  ALREADY_EXISTING_BOUNTY,
   ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   paramsValidationFail,
