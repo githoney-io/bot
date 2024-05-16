@@ -13,6 +13,7 @@ import {
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
   getSignUrl,
+  ISSUE_WITHOUT_LABELS,
   paramsValidationFail
 } from "./helpers";
 import appConfig from "./config/app-config";
@@ -48,19 +49,26 @@ export async function handleComment(
 
   switch (parsed._[0]) {
     case "attach-bounty":
+      if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
+        github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
+        return;
+      }
+
+      const labels = issue.labels?.map((label) => label.name) || [];
       const issueInfo = {
         creator: issue.user,
         number: issue.number,
         title: issue.title,
         description: issue.body || "",
         link: issue.html_url,
+        labels,
         source: "GitHub"
       };
       const contractInfo = {
         amount: parsed.amount,
         deadline: parsed.deadline,
         address: parsed.address,
-        network: parsed.network
+        network: parsed.network || "preprod"
       };
       const commentId = comment.id;
       await attachBounty({ issueInfo, contractInfo, commentId }, github);
@@ -104,6 +112,7 @@ export async function attachBounty(
       description,
       link: issueUrl,
       number: issueNumber,
+      labels,
       source,
       title
     } = issueInfo;
@@ -130,12 +139,13 @@ export async function attachBounty(
       },
       address,
       network: network.toLowerCase(),
-      source: source.toLowerCase()
+      source: source.toLowerCase(),
+      categories: labels
     });
 
     await github.replyToCommand(
       issueNumber,
-      `##This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
+      `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
         { ...contractInfo, deadline: deadline_ut },
         "someHashContract",
         "someSignUrl",

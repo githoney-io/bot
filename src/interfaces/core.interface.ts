@@ -7,6 +7,7 @@ interface IssueInfo {
   title: string;
   description: string;
   link: string;
+  labels: string[];
   source: string;
 }
 

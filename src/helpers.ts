@@ -6,6 +6,12 @@ import { GithubFacade } from "./adapters";
 import { ZodError } from "zod";
 import { StatusCodes } from "http-status-codes";
 
+const ISSUE_WITHOUT_LABELS = `
+  ### ⚠️ Warning ⚠️
+
+  You are trying to attach a bounty to an issue without labels. Please add a label to the issue or add the flag \`--no-labels\` to the command.
+`;
+
 const ATTACH_BOUNTY_RESPONSE_COMMENT = (
   params: ContractInfo,
   contractId: string,
@@ -25,9 +31,7 @@ const ATTACH_BOUNTY_RESPONSE_COMMENT = (
   
   The contract id is \`${contractId}\`
   
-  You can check the on-chain data on [Marlowe scan](https://preprod.marlowescan.com/contractView?tab=info&contractId=${encodeURIComponent(
-    contractId
-  )})
+  You can check the on-chain data on [...]
   
   The next step is to deposit the reward amount in the contract. You can use this [link](${signUrl}) to execute the transaction.
   `;
@@ -78,6 +82,7 @@ const callEp = async (
 };
 
 export {
+  ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   paramsValidationFail,
   getSignUrl,
