@@ -49,12 +49,12 @@ export async function handleComment(
 
   switch (parsed._[0]) {
     case "attach-bounty":
-      if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
-        github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
-        return;
-      }
+      // if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
+      //   github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
+      //   return;
+      // }
 
-      const labels = issue.labels?.map((label) => label.name) || [];
+      const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
       const issueInfo = {
         creator: issue.user,
         number: issue.number,
