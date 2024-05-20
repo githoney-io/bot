@@ -70,6 +70,11 @@ export function startBot(params: BotParams) {
     }
   });
 
+  app.webhooks.on("installation", async ({ payload }) => {
+    // TODO: create organization on DB.
+    console.log(payload);
+  });
+
   app.webhooks.on("issue_comment.created", async ({ payload }) => {
     if (!payload.installation) {
       throw Error("no installation defined");

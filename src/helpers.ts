@@ -1,12 +1,25 @@
 import axios from "axios";
 import appConfig from "./config/app-config";
-import { AttachBountyParams } from "./interfaces/core.interface";
+import { ContractInfo } from "./interfaces/core.interface";
 import { NETWORK } from "./utils/constants";
 import { GithubFacade } from "./adapters";
 import { ZodError } from "zod";
+import { StatusCodes } from "http-status-codes";
+
+const ALREADY_EXISTING_BOUNTY = `
+  ### ⚠️ Warning ⚠️
+
+  This issue already has a bounty attached.
+`;
+
+const ISSUE_WITHOUT_LABELS = `
+  ### ⚠️ Warning ⚠️
+
+  You are trying to attach a bounty to an issue without labels. Please add a label to the issue or add the flag \`--no-labels\` to the command.
+`;
 
 const ATTACH_BOUNTY_RESPONSE_COMMENT = (
-  params: AttachBountyParams,
+  params: ContractInfo,
   contractId: string,
   signUrl: string,
   network: NETWORK
@@ -18,15 +31,13 @@ const ATTACH_BOUNTY_RESPONSE_COMMENT = (
       : ""
   }
   
-  > reward: **${params.amount} ADA**
-  > work deadline: **${params.deadline} days**
-  > maintainer address: **${params.address.slice(0, 20)}..**
+  > Reward: **${params.amount} ADA**
+  > Work deadline: **${new Date(params.deadline).toUTCString()}**
+  > Maintainer address: **${params.address.slice(0, 20)}..**
   
   The contract id is \`${contractId}\`
   
-  You can check the on-chain data on [Marlowe scan](https://preprod.marlowescan.com/contractView?tab=info&contractId=${encodeURIComponent(
-    contractId
-  )})
+  You can check the on-chain data on [...]
   
   The next step is to deposit the reward amount in the contract. You can use this [link](${signUrl}) to execute the transaction.
   `;
@@ -66,7 +77,10 @@ const callEp = async (
   return axios
     .post(`${url}/${name}`, param, { headers: headers })
     .then((response) => {
-      if (response.status === 200) {
+      if (
+        response.status >= StatusCodes.OK &&
+        response.status < StatusCodes.MULTIPLE_CHOICES
+      ) {
         return response.data;
       }
       throw response;
@@ -74,6 +88,8 @@ const callEp = async (
 };
 
 export {
+  ALREADY_EXISTING_BOUNTY,
+  ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   paramsValidationFail,
   getSignUrl,
