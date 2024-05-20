@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { z } from "zod";
 
 dotenv.config();
 
@@ -7,27 +8,32 @@ export interface AppConfig {
   GITHUB_PRIVATE_KEY_PATH: string;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_APP_ID: string;
-  NETWORK: string;
-  PUBLIC_URL: string;
   WEBHOOK_PROXY_URL: string;
   TW_BOT_URL: string;
   TW_SECRET_KEY: string;
 }
 
-const appConfig: AppConfig = {
-  PORT: parseInt(process.env.PORT!) || 3000,
+const envSchema = z.object({
+  PORT: z.number(),
+  GITHUB_PRIVATE_KEY_PATH: z.string(),
+  GITHUB_WEBHOOK_SECRET: z.string().min(16),
+  GITHUB_APP_ID: z.string(),
+  WEBHOOK_PROXY_URL: z.string().url(),
+  TW_BOT_URL: z.string().url(),
+  TW_SECRET_KEY: z.string()
+});
+
+const nonValidatedAppConfig: AppConfig = {
+  PORT: Number(process.env.PORT) || 3001,
   GITHUB_PRIVATE_KEY_PATH:
-    process.env.GITHUB_PRIVATE_KEY_PATH || "githubapp.pem",
-  GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET || "donotuseinprod",
-  GITHUB_APP_ID: process.env.GITHUB_APP_ID || "406519",
-  NETWORK: process.env.NETWORK || "preprod",
-  PUBLIC_URL:
-    process.env.PUBLIC_URL ||
-    `http://localhost:${parseInt(process.env.PORT!) || 3000}`,
-  WEBHOOK_PROXY_URL:
-    process.env.WEBHOOK_PROXY_URL || "https://smee.io/N9gchHnEoXXDt",
+    (process.env.GITHUB_PRIVATE_KEY_PATH as string) || "githubapp.pem",
+  GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET as string,
+  GITHUB_APP_ID: process.env.GITHUB_APP_ID as string,
+  WEBHOOK_PROXY_URL: process.env.WEBHOOK_PROXY_URL as string,
   TW_BOT_URL: process.env.TW_BOT_URL as string,
   TW_SECRET_KEY: process.env.TW_SECRET_KEY as string
 };
+
+export const appConfig = envSchema.parse(nonValidatedAppConfig);
 
 export default appConfig;
