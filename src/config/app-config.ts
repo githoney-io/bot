@@ -11,6 +11,7 @@ export interface AppConfig {
   WEBHOOK_PROXY_URL: string;
   TW_BOT_URL: string;
   TW_SECRET_KEY: string;
+  BACKEND_URL: string;
 }
 
 const envSchema = z.object({
@@ -20,7 +21,8 @@ const envSchema = z.object({
   GITHUB_APP_ID: z.string(),
   WEBHOOK_PROXY_URL: z.string().url(),
   TW_BOT_URL: z.string().url(),
-  TW_SECRET_KEY: z.string()
+  TW_SECRET_KEY: z.string(),
+  BACKEND_URL: z.string().url()
 });
 
 const nonValidatedAppConfig: AppConfig = {
@@ -31,7 +33,8 @@ const nonValidatedAppConfig: AppConfig = {
   GITHUB_APP_ID: process.env.GITHUB_APP_ID as string,
   WEBHOOK_PROXY_URL: process.env.WEBHOOK_PROXY_URL as string,
   TW_BOT_URL: process.env.TW_BOT_URL as string,
-  TW_SECRET_KEY: process.env.TW_SECRET_KEY as string
+  TW_SECRET_KEY: process.env.TW_SECRET_KEY as string,
+  BACKEND_URL: process.env.BACKEND_URL as string
 };
 
 export const appConfig = envSchema.parse(nonValidatedAppConfig);

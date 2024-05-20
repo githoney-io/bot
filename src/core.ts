@@ -13,7 +13,6 @@ import {
   ALREADY_EXISTING_BOUNTY,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
-  getSignUrl,
   ISSUE_WITHOUT_LABELS,
   paramsValidationFail
 } from "./helpers";
@@ -258,11 +257,11 @@ export async function reclaimBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const signUrl = getSignUrl("withdraw", contractId, address);
+    // const signUrl = getSignUrl("withdraw", contractId, address);
 
     await github.replyToCommand(
       issueNumber,
-      `Reclaiming bounty from contract with ID **${contractId}**. Maintainer with address **${address}** may reclaim the bounty using this [link](${signUrl})`
+      `Reclaiming bounty from contract with ID **${contractId}**. Maintainer with address **${address}** may reclaim the bounty using this [link]()`
     );
   } catch (e) {
     await github.replyToCommand(
