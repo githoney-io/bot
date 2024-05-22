@@ -63,15 +63,15 @@ const paramsValidationFail = async (
   );
 };
 
-const getSignUrl = (operation: string, contractId: string, address: string) => {
-  const cid = contractId.replace("#", "%23");
-  return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
-};
+// const getSignUrl = (operation: string, contractId: string, address: string) => {
+//   const cid = contractId.replace("#", "%23");
+//   return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
+// };
 
 const callEp = async (
   name: string,
   param: any,
-  url: string = appConfig.PUBLIC_URL,
+  url: string = appConfig.BACKEND_URL,
   headers: Record<string, any> = {}
 ): Promise<any> => {
   return axios
@@ -92,6 +92,5 @@ export {
   ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   paramsValidationFail,
-  getSignUrl,
   callEp
 };

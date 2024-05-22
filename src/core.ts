@@ -13,7 +13,6 @@ import {
   ALREADY_EXISTING_BOUNTY,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
-  getSignUrl,
   ISSUE_WITHOUT_LABELS,
   paramsValidationFail
 } from "./helpers";
@@ -50,12 +49,12 @@ export async function handleComment(
 
   switch (parsed._[0]) {
     case "attach-bounty":
-      if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
-        github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
-        return;
-      }
+      // if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
+      //   github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
+      //   return;
+      // }
 
-      const labels = issue.labels?.map((label) => label.name) || [];
+      const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
       const issueInfo = {
         creator: issue.user,
         number: issue.number,
@@ -258,11 +257,11 @@ export async function reclaimBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const signUrl = getSignUrl("withdraw", contractId, address);
+    // const signUrl = getSignUrl("withdraw", contractId, address);
 
     await github.replyToCommand(
       issueNumber,
-      `Reclaiming bounty from contract with ID **${contractId}**. Maintainer with address **${address}** may reclaim the bounty using this [link](${signUrl})`
+      `Reclaiming bounty from contract with ID **${contractId}**. Maintainer with address **${address}** may reclaim the bounty using this [link]()`
     );
   } catch (e) {
     await github.replyToCommand(
