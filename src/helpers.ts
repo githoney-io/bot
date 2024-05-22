@@ -3,7 +3,7 @@ import appConfig from "./config/app-config";
 import { ContractInfo } from "./interfaces/core.interface";
 import { NETWORK } from "./utils/constants";
 import { GithubFacade } from "./adapters";
-import { ZodError } from "zod";
+import { ZodIssue } from "zod";
 import { StatusCodes } from "http-status-codes";
 
 const ALREADY_EXISTING_BOUNTY = `
@@ -46,11 +46,11 @@ const paramsValidationFail = async (
   github: GithubFacade,
   issueNumber: number,
   commentId: number,
-  e: ZodError
+  e: ZodIssue[]
 ) => {
   await github.rejectCommand(commentId);
   let errors = "";
-  for (const issue of e.issues) {
+  for (const issue of e) {
     errors = errors.concat(
       `> Parameter: **${issue.path.join(".")}** - Error: **${
         issue.message
@@ -62,6 +62,9 @@ const paramsValidationFail = async (
     `One or more parameters are wrong formatted:\n${errors}`
   );
 };
+
+const getRepoLink = (owner: string, repo: string, issue: number) =>
+  `github.com/${owner}/${repo}/issues/${issue}`;
 
 // const getSignUrl = (operation: string, contractId: string, address: string) => {
 //   const cid = contractId.replace("#", "%23");
@@ -91,6 +94,7 @@ export {
   ALREADY_EXISTING_BOUNTY,
   ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
+  getRepoLink,
   paramsValidationFail,
   callEp
 };

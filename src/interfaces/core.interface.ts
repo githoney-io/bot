@@ -6,9 +6,11 @@ interface IssueInfo {
   number: number;
   title: string;
   description: string;
-  link: string;
   labels: string[];
   source: string;
+  organization: string;
+  repository: string;
+  issue: number;
 }
 
 interface ContractInfo {
