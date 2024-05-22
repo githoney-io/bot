@@ -4,6 +4,7 @@ import EventSource from "eventsource";
 import { App } from "octokit";
 
 import { handleComment, handlePRClosed, handlePRMerged } from "./core";
+import { callEp } from "./helpers";
 
 export class GithubFacade {
   octokit: Octokit;
@@ -71,8 +72,21 @@ export function startBot(params: BotParams) {
   });
 
   app.webhooks.on("installation", async ({ payload }) => {
-    // TODO: create organization on DB.
-    console.log(payload);
+    try {
+      if (payload.action === "created") {
+        await callEp("organization", {
+          name: payload.installation.account.login,
+          avatarUri: payload.installation.account.avatar_url,
+          inPlatformId: payload.installation.account.id.toString(),
+          source: "github",
+          repositories: payload.repositories?.map((repo) => repo.name)
+        });
+      } else {
+        console.log("uninstallation event, ignoring.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   });
 
   app.webhooks.on("issue_comment.created", async ({ payload }) => {

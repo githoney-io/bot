@@ -13,12 +13,14 @@ import {
   ALREADY_EXISTING_BOUNTY,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
+  getRepoLink,
   ISSUE_WITHOUT_LABELS,
   paramsValidationFail
 } from "./helpers";
 import appConfig from "./config/app-config";
 import jwt from "jsonwebtoken";
 import { IBountyCreate } from "./interfaces/bounty.interface";
+import { platform } from "os";
 
 export async function handleComment(
   github: GithubFacade,
@@ -61,8 +63,11 @@ export async function handleComment(
         title: issue.title,
         description: issue.body || "",
         link: issue.html_url,
-        labels,
-        source: "GitHub"
+        source: "GitHub",
+        organization: github.owner,
+        repository: github.repo,
+        issue: issue.number,
+        labels
       };
       const contractInfo = {
         amount: parsed.amount,
@@ -110,11 +115,13 @@ export async function attachBounty(
     const {
       creator,
       description,
-      link: issueUrl,
-      number: issueNumber,
       labels,
       source,
-      title
+      title,
+      issue,
+      organization,
+      repository,
+      number: issueNumber
     } = issueInfo;
     const { amount, deadline, address, network } = contractInfo;
 
@@ -128,7 +135,6 @@ export async function attachBounty(
     }: IBountyCreate = await callEp("bounty", {
       title,
       description,
-      url: issueUrl,
       amount: amountADA,
       deadline: deadline_ut,
       creator: {
@@ -137,10 +143,13 @@ export async function attachBounty(
         email: creator.email,
         avatarUrl: creator.avatar_url
       },
-      address,
       network: network.toLowerCase(),
-      source: source.toLowerCase(),
-      categories: labels
+      platform: source.toLowerCase(),
+      categories: labels,
+      organization,
+      repository,
+      issue,
+      address
     });
 
     await github.replyToCommand(
@@ -163,7 +172,7 @@ export async function attachBounty(
     callEp(
       twBotRoute,
       {
-        linkToIssue: issueUrl,
+        linkToIssue: getRepoLink(organization, repository, issue),
         amount,
         deadline: new Date(deadline_ut).toISOString(),
         contractHash: "someHashContract"
