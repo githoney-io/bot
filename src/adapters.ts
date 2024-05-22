@@ -77,8 +77,9 @@ export function startBot(params: BotParams) {
         await callEp("organization", {
           name: payload.installation.account.login,
           avatarUri: payload.installation.account.avatar_url,
+          inPlatformId: payload.installation.account.id.toString(),
           source: "github",
-          inPlatformId: payload.installation.account.id.toString()
+          repositories: payload.repositories?.map((repo) => repo.name)
         });
       } else {
         console.log("uninstallation event, ignoring.");
