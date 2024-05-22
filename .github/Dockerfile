@@ -1,14 +1,9 @@
 FROM node:20
 
-WORKDIR /code
+COPY build-artifacts /src
 
-COPY ./package.json ./package.json
+WORKDIR /src
 
-RUN npm install --loglevel warn --unsafe-perm
+RUN ["npm", "install"]
 
-COPY . ./
-
-ENV PORT=3001
-EXPOSE 3001
-
-CMD ["npm", "start"]
+ENTRYPOINT [ "npm", "run", "start" ]
