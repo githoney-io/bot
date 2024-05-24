@@ -11,6 +11,7 @@ interface IssueInfo {
   organization: string;
   repository: string;
   issue: number;
+  issueUrl: string;
 }
 
 interface ContractInfo {

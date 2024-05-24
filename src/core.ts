@@ -67,6 +67,7 @@ export async function handleComment(
         organization: github.owner,
         repository: github.repo,
         issue: issue.number,
+        issueUrl: issue.html_url,
         labels
       };
       const contractInfo = {
@@ -121,7 +122,8 @@ export async function attachBounty(
       issue,
       organization,
       repository,
-      number: issueNumber
+      number: issueNumber,
+      issueUrl
     } = issueInfo;
     const { amount, deadline, address, network } = contractInfo;
 
@@ -149,7 +151,8 @@ export async function attachBounty(
       organization,
       repository,
       issue,
-      address
+      address,
+      issueUrl
     });
 
     await github.replyToCommand(
