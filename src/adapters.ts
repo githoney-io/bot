@@ -79,7 +79,11 @@ export function startBot(params: BotParams) {
           avatarUri: payload.installation.account.avatar_url,
           inPlatformId: payload.installation.account.id.toString(),
           source: "github",
-          repositories: payload.repositories?.map((repo) => repo.name)
+          repositories: payload.repositories?.map((repo) => ({
+            name: repo.name,
+            url: `https://github.com/${repo.full_name}`
+          })),
+          orgUrl: payload.installation.account.html_url
         });
       } else {
         console.log("uninstallation event, ignoring.");
