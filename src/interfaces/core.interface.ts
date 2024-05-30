@@ -32,6 +32,7 @@ interface AcceptBountyParams {
   commentId: number;
   contractId: string;
   address: string;
+  assignee: User;
 }
 
 interface ReclaimBountyParams {

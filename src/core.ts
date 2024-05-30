@@ -14,13 +14,11 @@ import {
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
   getRepoLink,
-  ISSUE_WITHOUT_LABELS,
   paramsValidationFail
 } from "./helpers";
 import appConfig from "./config/app-config";
 import jwt from "jsonwebtoken";
 import { IBountyCreate } from "./interfaces/bounty.interface";
-import { platform } from "os";
 
 export async function handleComment(
   github: GithubFacade,
@@ -85,7 +83,8 @@ export async function handleComment(
           issueNumber: issue.number,
           commentId: comment.id,
           contractId: parsed.contract,
-          address: parsed.address
+          address: parsed.address,
+          assignee: comment.user
         },
         github
       );
@@ -215,23 +214,27 @@ export async function acceptBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueNumber, commentId, contractId, address } = params;
+    const { issueNumber, commentId, contractId, address, assignee } = params;
 
     await github.acknowledgeCommand(commentId);
 
-    await callEp("bounty/assign", {
-      contractId,
+    const {
+      data: { bounty }
+    }: IBountyCreate = await callEp("bounty/assign", {
+      contract: contractId,
+      assignee: {
+        username: assignee.login,
+        id: assignee.id,
+        email: assignee.email,
+        avatarUrl: assignee.avatar_url
+      },
       address,
-      issueNumber
+      platform: "github"
     });
-
-    // TODO: handle this with the corresponding network
-    // const txUrl = `https://preprod.cexplorer.io/tx/`;
 
     await github.replyToCommand(
       issueNumber,
-      "The backend is unavailable at the moment"
-      // `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. The claim token has been sent to address ${address}. See tx at ${txUrl}${txId}. Holder of the token will be able to claim the reward once this PR gets merged.`
+      `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. See tx at txUrl/txId. You will be able to claim the reward once this PR gets merged.`
     );
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -242,14 +245,13 @@ export async function acceptBounty(
         params.commentId,
         e.response?.data.error
       );
-    } else if (e instanceof AxiosError && e.response?.status === 404) {
-      // If the error is a 404, it means that the client typed an
-      // invalid contract ID or the address is in the wrong network
-      await github.rejectCommand(params.commentId);
-      await github.replyToCommand(
-        params.issueNumber,
-        "The contract ID provided does not exist or you typed an address in the wrong network."
-      );
+    } else if (
+      e instanceof AxiosError &&
+      e.response?.status &&
+      e.response?.status > 400 &&
+      e.response?.status < 500
+    ) {
+      await github.replyToCommand(params.issueNumber, e.response.data.error);
     } else {
       await github.replyToCommand(
         params.issueNumber,
