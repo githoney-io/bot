@@ -1,3 +1,4 @@
+import { GithubFacade } from "../adapters";
 import { NETWORK } from "../utils/constants";
 import { User } from "@octokit/webhooks-types";
 
@@ -42,9 +43,17 @@ interface ReclaimBountyParams {
   address: string;
 }
 
+interface PRHandler {
+  facade: GithubFacade;
+  issueNumber: number;
+  repoName: string;
+  orgName: string;
+}
+
 export {
   AttachBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
-  ContractInfo
+  ContractInfo,
+  PRHandler
 };

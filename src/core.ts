@@ -7,6 +7,7 @@ import { ONE_ADA_IN_LOVELACE } from "./utils/constants";
 import {
   AcceptBountyParams,
   AttachBountyParams,
+  PRHandler,
   ReclaimBountyParams
 } from "./interfaces/core.interface";
 import {
@@ -28,7 +29,7 @@ export async function handleComment(
   const commentBody = comment.body.trim();
 
   if (!commentBody.includes("/githoney")) {
-    console.debug("skipping because not directed to bot");
+    console.debug("Skipping because not directed to bot");
     return;
   }
 
@@ -39,7 +40,6 @@ export async function handleComment(
   console.debug(args);
 
   let parsed = minimist(args);
-  console.debug(parsed);
 
   if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
@@ -287,22 +287,28 @@ export async function reclaimBounty(
 }
 
 // Calls to {PUBLIC_URL}/bounty/merge (POST)
-export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
+export async function handlePRMerged({
+  facade: github,
+  issueNumber,
+  orgName,
+  repoName
+}: PRHandler) {
   try {
-    await callEp("bounty/merge", {
-      prNumber: pr.number
+    const res = await callEp("bounty/merge", {
+      issue: issueNumber,
+      orgName,
+      repoName,
+      platform: "github"
     });
-
-    // const signUrl = getSignUrl("withdraw", contractId, devAddr);
+    console.log(res);
 
     await github.replyToCommand(
-      pr.number,
-      "The backend is unavailable at the moment"
-      // `Congrats! By merging this PR the bounty for contract ${contractId} has been unlocked. Use this [link](${signUrl}) to claim the reward.`
+      issueNumber,
+      `Congrats! By merging this PR the bounty for contract contractId has been unlocked. Use this [link](signUrl to claim the reward.`
     );
   } catch (e) {
     await github.replyToCommand(
-      pr.number,
+      issueNumber,
       "There was an error unlocking the contract. Please try again."
     );
     console.error(chalk.red(`"Error unlocking contract. ${e}`));
@@ -310,22 +316,27 @@ export async function handlePRMerged(github: GithubFacade, pr: PullRequest) {
 }
 
 // Calls to {PUBLIC_URL}/bounty/cancel (POST)
-export async function handlePRClosed(github: GithubFacade, pr: PullRequest) {
+export async function handlePRClosed({
+  facade: github,
+  issueNumber,
+  orgName,
+  repoName
+}: PRHandler) {
   try {
-    await callEp("bounty/cancel", {
-      prNumber: pr.number
+    const res = await callEp("bounty/cancel", {
+      issue: issueNumber,
+      orgName,
+      repoName,
+      platform: "github"
     });
 
-    const txUrl = `https://preprod.cexplorer.io/tx/`;
-
     await github.replyToCommand(
-      pr.number,
-      "The backend is unavailable at the moment"
-      // `Cancelling contract with ID **${contractId}**. You can see the cancel transaction in this [link](${txUrl}${txId})`
+      issueNumber,
+      `Cancelling contract with ID **contractId**. You can see the cancel transaction in this [link](txUrltxId)`
     );
   } catch (e) {
     await github.replyToCommand(
-      pr.number,
+      issueNumber,
       "There was an error cancelling the contract. Please try again."
     );
     console.error(chalk.red(`Error cancelling contract: ${e}`));

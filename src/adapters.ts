@@ -2,7 +2,6 @@ import { Octokit } from "octokit";
 import { createNodeMiddleware } from "@octokit/webhooks";
 import EventSource from "eventsource";
 import { App } from "octokit";
-
 import { handleComment, handlePRClosed, handlePRMerged } from "./core";
 import { callEp } from "./helpers";
 
@@ -71,9 +70,11 @@ export function startBot(params: BotParams) {
     }
   });
 
+  // TODO: add installation.repositories.{added, removed} events
   app.webhooks.on("installation", async ({ payload }) => {
     try {
       if (payload.action === "created") {
+        console.log("Installation event started");
         await callEp("organization", {
           name: payload.installation.account.login,
           avatarUri: payload.installation.account.avatar_url,
@@ -86,10 +87,10 @@ export function startBot(params: BotParams) {
           orgUrl: payload.installation.account.html_url
         });
       } else {
-        console.log("uninstallation event, ignoring.");
+        console.log("Uninstallation event, ignoring.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Installation event error: ", err);
     }
   });
 
@@ -98,7 +99,7 @@ export function startBot(params: BotParams) {
       throw Error("no installation defined");
     }
 
-    console.log(`comment for installation ${payload.installation.id}`);
+    console.log(`Comment for installation ${payload.installation.id}`);
     let installation = await app.getInstallationOctokit(
       payload.installation.id
     );
@@ -128,10 +129,17 @@ export function startBot(params: BotParams) {
       payload.repository.name
     );
 
+    const prHandleObject = {
+      facade,
+      issueNumber: payload.pull_request.number,
+      repoName: payload.repository.name,
+      orgName: payload.repository.owner.login
+    };
+
     if (payload.pull_request.merged) {
-      await handlePRMerged(facade, payload.pull_request);
+      await handlePRMerged(prHandleObject);
     } else {
-      await handlePRClosed(facade, payload.pull_request);
+      await handlePRClosed(prHandleObject);
     }
   });
 
