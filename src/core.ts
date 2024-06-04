@@ -229,7 +229,8 @@ export async function acceptBounty(
         avatarUrl: assignee.avatar_url
       },
       address,
-      platform: "github"
+      platform: "github",
+      prNumber: issueNumber
     });
 
     await github.replyToCommand(
@@ -295,7 +296,7 @@ export async function handlePRMerged({
 }: PRHandler) {
   try {
     const res = await callEp("bounty/merge", {
-      issue: issueNumber,
+      prNumber: issueNumber,
       orgName,
       repoName,
       platform: "github"
@@ -324,7 +325,7 @@ export async function handlePRClosed({
 }: PRHandler) {
   try {
     const res = await callEp("bounty/cancel", {
-      issue: issueNumber,
+      prNumber: issueNumber,
       orgName,
       repoName,
       platform: "github"
