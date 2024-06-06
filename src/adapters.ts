@@ -74,6 +74,14 @@ export function startBot(params: BotParams) {
   app.webhooks.on("installation", async ({ payload }) => {
     try {
       if (payload.action === "created") {
+        let installation = await app.getInstallationOctokit(
+          payload.installation.id
+        );
+
+        const { data } = await installation.rest.orgs.get({
+          org: payload.installation.account.login
+        });
+
         console.log("Installation event started");
         await callEp("organization", {
           name: payload.installation.account.login,
@@ -84,7 +92,14 @@ export function startBot(params: BotParams) {
             name: repo.name,
             url: `https://github.com/${repo.full_name}`
           })),
-          orgUrl: payload.installation.account.html_url
+          orgUrl: payload.installation.account.html_url,
+          description: data.description,
+          email: data.email,
+          twitterUsername: data.twitter_username,
+          location: data.location,
+          pageUrl: data.blog,
+          publicRepos: data.public_repos,
+          followers: data.followers
         });
       } else {
         console.log("Uninstallation event, ignoring.");
