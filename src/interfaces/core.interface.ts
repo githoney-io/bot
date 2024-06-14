@@ -2,8 +2,20 @@ import { GithubFacade } from "../adapters";
 import { NETWORK } from "../utils/constants";
 import { User } from "@octokit/webhooks-types";
 
+interface GithubUser {
+  login: string;
+  id: number;
+  bio: string | null;
+  avatar_url: string;
+  blog: string | null;
+  email: string | null;
+  location: string | null;
+  twitter_username?: string | null;
+  html_url: string;
+}
+
 interface IssueInfo {
-  creator: User;
+  creator: GithubUser;
   number: number;
   title: string;
   description: string;
@@ -33,7 +45,7 @@ interface AcceptBountyParams {
   commentId: number;
   contractId: string;
   address: string;
-  assignee: User;
+  assignee: GithubUser;
 }
 
 interface ReclaimBountyParams {

@@ -47,16 +47,20 @@ export async function handleComment(
     return;
   }
 
+  const { data: creator } = await github.octokit.rest.users.getByUsername({
+    username: comment.user.login
+  });
+
   switch (parsed._[0]) {
     case "attach-bounty":
       // if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
       //   github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
       //   return;
       // }
-
       const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
+
       const issueInfo = {
-        creator: issue.user,
+        creator,
         number: issue.number,
         title: issue.title,
         description: issue.body || "",
@@ -84,7 +88,7 @@ export async function handleComment(
           commentId: comment.id,
           contractId: parsed.contract,
           address: parsed.address,
-          assignee: comment.user
+          assignee: creator
         },
         github
       );
@@ -142,7 +146,12 @@ export async function attachBounty(
         username: creator.login,
         id: creator.id,
         email: creator.email,
-        avatarUrl: creator.avatar_url
+        avatarUrl: creator.avatar_url,
+        description: creator.bio,
+        pageUrl: creator.blog,
+        userUrl: creator.html_url,
+        location: creator.location,
+        twitterUsername: creator.twitter_username
       },
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
@@ -226,7 +235,12 @@ export async function acceptBounty(
         username: assignee.login,
         id: assignee.id,
         email: assignee.email,
-        avatarUrl: assignee.avatar_url
+        avatarUrl: assignee.avatar_url,
+        description: assignee.bio,
+        pageUrl: assignee.blog,
+        userUrl: assignee.html_url,
+        location: assignee.location,
+        twitterUsername: assignee.twitter_username
       },
       address,
       platform: "github",
