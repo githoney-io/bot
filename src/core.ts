@@ -7,6 +7,7 @@ import { ONE_ADA_IN_LOVELACE } from "./utils/constants";
 import {
   AcceptBountyParams,
   AttachBountyParams,
+  FundBountyParams,
   PRHandler,
   ReclaimBountyParams
 } from "./interfaces/core.interface";
@@ -56,7 +57,7 @@ export async function handleComment(
 
       const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
       const issueInfo = {
-        creator: issue.user,
+        creator: comment.user,
         number: issue.number,
         title: issue.title,
         description: issue.body || "",
@@ -77,6 +78,17 @@ export async function handleComment(
       const commentId = comment.id;
       await attachBounty({ issueInfo, contractInfo, commentId }, github);
       break;
+    case "fund-bounty": // /githoney fund-bounty --amount <ada> --address <wallet>
+      const funder = comment.user;
+      const fundInfo = {
+        issue: issue.number,
+        amount: parsed.amount,
+        address: parsed.address,
+        organization: github.owner,
+        repository: github.repo
+      };
+      const fundCommentId = comment.id;
+      await fundBounty({ funder, fundInfo, fundCommentId }, github);
     case "accept-bounty":
       await acceptBounty(
         {
@@ -201,6 +213,55 @@ export async function attachBounty(
     } else {
       await github.replyToCommand(
         params.issueInfo.number,
+        "There was an error creating the contract. Please try again."
+      );
+      console.error(chalk.red(`Error creating contract. ${e}`));
+    }
+  }
+}
+
+// Calls to {PUBLIC_URL}/bounty/fund (POST)
+export async function fundBounty(
+  params: FundBountyParams,
+  github: GithubFacade
+) {
+  try {
+    const { fundCommentId, fundInfo, funder } = params;
+    await github.acknowledgeCommand(fundCommentId);
+
+    const amountADA = fundInfo.amount * ONE_ADA_IN_LOVELACE;
+
+    const res = await callEp("bounty/fund", {
+      address: fundInfo.address,
+      amount: amountADA,
+      issueNumber: fundInfo.issue,
+      platform: "github",
+      funder: {
+        username: funder.login,
+        id: funder.id,
+        email: funder.email,
+        avatarUrl: funder.avatar_url
+      },
+      orgName: fundInfo.organization,
+      repoName: fundInfo.repository
+    });
+
+    await github.replyToCommand(
+      fundInfo.issue,
+      `Bounty has been funded with ${fundInfo.amount} ADA. You can see the transaction [here](txUrl/txId)`
+    );
+  } catch (e) {
+    if (e instanceof AxiosError && e.response?.status === 400) {
+      // If the error is a 400, it means that the validation failed
+      await paramsValidationFail(
+        github,
+        params.fundInfo.issue,
+        params.fundCommentId,
+        e.response?.data.error
+      );
+    } else {
+      await github.replyToCommand(
+        params.fundInfo.issue,
         "There was an error creating the contract. Please try again."
       );
       console.error(chalk.red(`Error creating contract. ${e}`));

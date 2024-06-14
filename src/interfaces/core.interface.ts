@@ -28,6 +28,18 @@ interface AttachBountyParams {
   commentId: number;
 }
 
+interface FundBountyParams {
+  funder: User;
+  fundInfo: {
+    issue: number;
+    amount: number;
+    address: string;
+    organization: string;
+    repository: string;
+  };
+  fundCommentId: number;
+}
+
 interface AcceptBountyParams {
   issueNumber: number;
   commentId: number;
@@ -52,6 +64,7 @@ interface PRHandler {
 
 export {
   AttachBountyParams,
+  FundBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
   ContractInfo,
