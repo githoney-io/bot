@@ -78,17 +78,20 @@ export async function handleComment(
       const commentId = comment.id;
       await attachBounty({ issueInfo, contractInfo, commentId }, github);
       break;
-    case "fund-bounty": // /githoney fund-bounty --amount <ada> --address <wallet>
-      const funder = comment.user;
+    case "fund-bounty":
+      // /githoney fund-bounty --tokens ADA=<amount> --address <wallet>
+      // /githoney fund-bounty --tokens <token>=<amount>&...&<token>=<amount> --address <wallet>
+      const funder = comment.user.login;
       const fundInfo = {
         issue: issue.number,
-        amount: parsed.amount,
+        tokens: parsed.tokens?.split("&") || [],
         address: parsed.address,
         organization: github.owner,
         repository: github.repo
       };
       const fundCommentId = comment.id;
       await fundBounty({ funder, fundInfo, fundCommentId }, github);
+      break;
     case "accept-bounty":
       await acceptBounty(
         {
@@ -220,27 +223,41 @@ export async function attachBounty(
   }
 }
 
-// Calls to {PUBLIC_URL}/bounty/fund (POST)
+// Calls to {PUBLIC_URL}/bounty/sponsor (POST)
 export async function fundBounty(
   params: FundBountyParams,
   github: GithubFacade
 ) {
   try {
-    const { fundCommentId, fundInfo, funder } = params;
+    const { fundCommentId, fundInfo, funder: username } = params;
     await github.acknowledgeCommand(fundCommentId);
 
-    const amountADA = fundInfo.amount * ONE_ADA_IN_LOVELACE;
+    const { data } = await github.octokit.rest.users.getByUsername({
+      username: username
+    });
 
-    const res = await callEp("bounty/fund", {
+    const tokens = fundInfo.tokens.map((t) => {
+      const [name, amount] = t.split("=");
+      return name.toLowerCase() === "ADA"
+        ? { name, amount: Number(amount) * ONE_ADA_IN_LOVELACE }
+        : { name, amount: Number(amount) };
+    });
+
+    const res = await callEp("bounty/sponsor", {
       address: fundInfo.address,
-      amount: amountADA,
+      tokens,
       issueNumber: fundInfo.issue,
       platform: "github",
       funder: {
-        username: funder.login,
-        id: funder.id,
-        email: funder.email,
-        avatarUrl: funder.avatar_url
+        username: data.login,
+        id: data.id,
+        email: data.email,
+        avatarUrl: data.avatar_url,
+        description: data.bio,
+        pageUrl: data.blog,
+        userUrl: data.html_url,
+        location: data.location,
+        twitterUsername: data.twitter_username
       },
       orgName: fundInfo.organization,
       repoName: fundInfo.repository
@@ -248,7 +265,7 @@ export async function fundBounty(
 
     await github.replyToCommand(
       fundInfo.issue,
-      `Bounty has been funded with ${fundInfo.amount} ADA. You can see the transaction [here](txUrl/txId)`
+      `Bounty has been funded!. You can see the transaction [here](txUrl/txId)`
     );
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {

@@ -29,10 +29,10 @@ interface AttachBountyParams {
 }
 
 interface FundBountyParams {
-  funder: User;
+  funder: string;
   fundInfo: {
     issue: number;
-    amount: number;
+    tokens: string[];
     address: string;
     organization: string;
     repository: string;
