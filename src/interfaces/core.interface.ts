@@ -3,7 +3,6 @@ import { NETWORK } from "../utils/constants";
 import { User } from "@octokit/webhooks-types";
 
 interface IssueInfo {
-  creator: User;
   number: number;
   title: string;
   description: string;
@@ -23,6 +22,7 @@ interface ContractInfo {
 }
 
 interface AttachBountyParams {
+  creator: string;
   issueInfo: IssueInfo;
   contractInfo: ContractInfo;
   commentId: number;
@@ -45,7 +45,7 @@ interface AcceptBountyParams {
   commentId: number;
   contractId: string;
   address: string;
-  assignee: User;
+  assignee: string;
 }
 
 interface ReclaimBountyParams {

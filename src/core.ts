@@ -54,10 +54,9 @@ export async function handleComment(
       //   github.replyToCommand(issue.number, ISSUE_WITHOUT_LABELS);
       //   return;
       // }
-
       const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
+
       const issueInfo = {
-        creator: comment.user,
         number: issue.number,
         title: issue.title,
         description: issue.body || "",
@@ -76,7 +75,10 @@ export async function handleComment(
         network: parsed.network || "preprod"
       };
       const commentId = comment.id;
-      await attachBounty({ issueInfo, contractInfo, commentId }, github);
+      await attachBounty(
+        { creator: comment.user.login, issueInfo, contractInfo, commentId },
+        github
+      );
       break;
     case "fund-bounty":
       // /githoney fund-bounty --tokens ADA=<amount> --address <wallet>
@@ -99,7 +101,7 @@ export async function handleComment(
           commentId: comment.id,
           contractId: parsed.contract,
           address: parsed.address,
-          assignee: comment.user
+          assignee: comment.user.login
         },
         github
       );
@@ -126,9 +128,8 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueInfo, contractInfo, commentId } = params;
+    const { creator, issueInfo, contractInfo, commentId } = params;
     const {
-      creator,
       description,
       labels,
       source,
@@ -146,6 +147,12 @@ export async function attachBounty(
     const deadline_ut = Date.now() + deadline * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
+    const { data: creatorData } = await github.octokit.rest.users.getByUsername(
+      {
+        username: creator
+      }
+    );
+
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty", {
@@ -154,10 +161,15 @@ export async function attachBounty(
       amount: amountADA,
       deadline: deadline_ut,
       creator: {
-        username: creator.login,
-        id: creator.id,
-        email: creator.email,
-        avatarUrl: creator.avatar_url
+        username: creatorData.login,
+        id: creatorData.id,
+        email: creatorData.email,
+        avatarUrl: creatorData.avatar_url,
+        description: creatorData.bio,
+        pageUrl: creatorData.blog,
+        userUrl: creatorData.html_url,
+        location: creatorData.location,
+        twitterUsername: creatorData.twitter_username
       },
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
@@ -296,15 +308,25 @@ export async function acceptBounty(
 
     await github.acknowledgeCommand(commentId);
 
+    const { data: assigneeData } =
+      await github.octokit.rest.users.getByUsername({
+        username: assignee
+      });
+
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty/assign", {
       contract: contractId,
       assignee: {
-        username: assignee.login,
-        id: assignee.id,
-        email: assignee.email,
-        avatarUrl: assignee.avatar_url
+        username: assigneeData.login,
+        id: assigneeData.id,
+        email: assigneeData.email,
+        avatarUrl: assigneeData.avatar_url,
+        description: assigneeData.bio,
+        pageUrl: assigneeData.blog,
+        userUrl: assigneeData.html_url,
+        location: assigneeData.location,
+        twitterUsername: assigneeData.twitter_username
       },
       address,
       platform: "github",
