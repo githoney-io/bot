@@ -162,6 +162,7 @@ export async function attachBounty(
       deadline: deadline_ut,
       creator: {
         username: creatorData.login,
+        name: creatorData.name,
         id: creatorData.id,
         email: creatorData.email,
         avatarUrl: creatorData.avatar_url,
@@ -262,6 +263,7 @@ export async function fundBounty(
       platform: "github",
       funder: {
         username: data.login,
+        name: data.name,
         id: data.id,
         email: data.email,
         avatarUrl: data.avatar_url,
@@ -318,6 +320,7 @@ export async function acceptBounty(
     }: IBountyCreate = await callEp("bounty/assign", {
       contract: contractId,
       assignee: {
+        name: assigneeData.name,
         username: assigneeData.login,
         id: assigneeData.id,
         email: assigneeData.email,
