@@ -2,20 +2,7 @@ import { GithubFacade } from "../adapters";
 import { NETWORK } from "../utils/constants";
 import { User } from "@octokit/webhooks-types";
 
-interface GithubUser {
-  login: string;
-  id: number;
-  bio: string | null;
-  avatar_url: string;
-  blog: string | null;
-  email: string | null;
-  location: string | null;
-  twitter_username?: string | null;
-  html_url: string;
-}
-
 interface IssueInfo {
-  creator: GithubUser;
   number: number;
   title: string;
   description: string;
@@ -35,9 +22,22 @@ interface ContractInfo {
 }
 
 interface AttachBountyParams {
+  creator: string;
   issueInfo: IssueInfo;
   contractInfo: ContractInfo;
   commentId: number;
+}
+
+interface FundBountyParams {
+  funder: string;
+  fundInfo: {
+    issue: number;
+    tokens: string[];
+    address: string;
+    organization: string;
+    repository: string;
+  };
+  fundCommentId: number;
 }
 
 interface AcceptBountyParams {
@@ -45,7 +45,7 @@ interface AcceptBountyParams {
   commentId: number;
   contractId: string;
   address: string;
-  assignee: GithubUser;
+  assignee: string;
 }
 
 interface ReclaimBountyParams {
@@ -64,6 +64,7 @@ interface PRHandler {
 
 export {
   AttachBountyParams,
+  FundBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
   ContractInfo,

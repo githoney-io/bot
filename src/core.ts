@@ -7,6 +7,7 @@ import { ONE_ADA_IN_LOVELACE } from "./utils/constants";
 import {
   AcceptBountyParams,
   AttachBountyParams,
+  FundBountyParams,
   PRHandler,
   ReclaimBountyParams
 } from "./interfaces/core.interface";
@@ -47,10 +48,6 @@ export async function handleComment(
     return;
   }
 
-  const { data: creator } = await github.octokit.rest.users.getByUsername({
-    username: comment.user.login
-  });
-
   switch (parsed._[0]) {
     case "attach-bounty":
       // if (issue.labels?.length === 0 && !args.includes("--no-labels")) {
@@ -60,7 +57,6 @@ export async function handleComment(
       const labels: string[] = []; // issue.labels?.map((label) => label.name) || [];
 
       const issueInfo = {
-        creator,
         number: issue.number,
         title: issue.title,
         description: issue.body || "",
@@ -79,7 +75,24 @@ export async function handleComment(
         network: parsed.network || "preprod"
       };
       const commentId = comment.id;
-      await attachBounty({ issueInfo, contractInfo, commentId }, github);
+      await attachBounty(
+        { creator: comment.user.login, issueInfo, contractInfo, commentId },
+        github
+      );
+      break;
+    case "fund-bounty":
+      // /githoney fund-bounty --tokens ADA=<amount> --address <wallet>
+      // /githoney fund-bounty --tokens <token>=<amount>&...&<token>=<amount> --address <wallet>
+      const funder = comment.user.login;
+      const fundInfo = {
+        issue: issue.number,
+        tokens: parsed.tokens?.split("&") || [],
+        address: parsed.address,
+        organization: github.owner,
+        repository: github.repo
+      };
+      const fundCommentId = comment.id;
+      await fundBounty({ funder, fundInfo, fundCommentId }, github);
       break;
     case "accept-bounty":
       await acceptBounty(
@@ -88,7 +101,7 @@ export async function handleComment(
           commentId: comment.id,
           contractId: parsed.contract,
           address: parsed.address,
-          assignee: creator
+          assignee: comment.user.login
         },
         github
       );
@@ -115,9 +128,8 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueInfo, contractInfo, commentId } = params;
+    const { creator, issueInfo, contractInfo, commentId } = params;
     const {
-      creator,
       description,
       labels,
       source,
@@ -135,6 +147,12 @@ export async function attachBounty(
     const deadline_ut = Date.now() + deadline * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
+    const { data: creatorData } = await github.octokit.rest.users.getByUsername(
+      {
+        username: creator
+      }
+    );
+
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty", {
@@ -143,15 +161,15 @@ export async function attachBounty(
       amount: amountADA,
       deadline: deadline_ut,
       creator: {
-        username: creator.login,
-        id: creator.id,
-        email: creator.email,
-        avatarUrl: creator.avatar_url,
-        description: creator.bio,
-        pageUrl: creator.blog,
-        userUrl: creator.html_url,
-        location: creator.location,
-        twitterUsername: creator.twitter_username
+        username: creatorData.login,
+        id: creatorData.id,
+        email: creatorData.email,
+        avatarUrl: creatorData.avatar_url,
+        description: creatorData.bio,
+        pageUrl: creatorData.blog,
+        userUrl: creatorData.html_url,
+        location: creatorData.location,
+        twitterUsername: creatorData.twitter_username
       },
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
@@ -217,6 +235,69 @@ export async function attachBounty(
   }
 }
 
+// Calls to {PUBLIC_URL}/bounty/sponsor (POST)
+export async function fundBounty(
+  params: FundBountyParams,
+  github: GithubFacade
+) {
+  try {
+    const { fundCommentId, fundInfo, funder: username } = params;
+    await github.acknowledgeCommand(fundCommentId);
+
+    const { data } = await github.octokit.rest.users.getByUsername({
+      username: username
+    });
+
+    const tokens = fundInfo.tokens.map((t) => {
+      const [name, amount] = t.split("=");
+      return name.toLowerCase() === "ADA"
+        ? { name, amount: Number(amount) * ONE_ADA_IN_LOVELACE }
+        : { name, amount: Number(amount) };
+    });
+
+    const res = await callEp("bounty/sponsor", {
+      address: fundInfo.address,
+      tokens,
+      issueNumber: fundInfo.issue,
+      platform: "github",
+      funder: {
+        username: data.login,
+        id: data.id,
+        email: data.email,
+        avatarUrl: data.avatar_url,
+        description: data.bio,
+        pageUrl: data.blog,
+        userUrl: data.html_url,
+        location: data.location,
+        twitterUsername: data.twitter_username
+      },
+      orgName: fundInfo.organization,
+      repoName: fundInfo.repository
+    });
+
+    await github.replyToCommand(
+      fundInfo.issue,
+      `Bounty has been funded!. You can see the transaction [here](txUrl/txId)`
+    );
+  } catch (e) {
+    if (e instanceof AxiosError && e.response?.status === 400) {
+      // If the error is a 400, it means that the validation failed
+      await paramsValidationFail(
+        github,
+        params.fundInfo.issue,
+        params.fundCommentId,
+        e.response?.data.error
+      );
+    } else {
+      await github.replyToCommand(
+        params.fundInfo.issue,
+        "There was an error creating the contract. Please try again."
+      );
+      console.error(chalk.red(`Error creating contract. ${e}`));
+    }
+  }
+}
+
 // Calls to {PUBLIC_URL}/bounty/assign (POST)
 export async function acceptBounty(
   params: AcceptBountyParams,
@@ -227,20 +308,25 @@ export async function acceptBounty(
 
     await github.acknowledgeCommand(commentId);
 
+    const { data: assigneeData } =
+      await github.octokit.rest.users.getByUsername({
+        username: assignee
+      });
+
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty/assign", {
       contract: contractId,
       assignee: {
-        username: assignee.login,
-        id: assignee.id,
-        email: assignee.email,
-        avatarUrl: assignee.avatar_url,
-        description: assignee.bio,
-        pageUrl: assignee.blog,
-        userUrl: assignee.html_url,
-        location: assignee.location,
-        twitterUsername: assignee.twitter_username
+        username: assigneeData.login,
+        id: assigneeData.id,
+        email: assigneeData.email,
+        avatarUrl: assigneeData.avatar_url,
+        description: assigneeData.bio,
+        pageUrl: assigneeData.blog,
+        userUrl: assigneeData.html_url,
+        location: assigneeData.location,
+        twitterUsername: assigneeData.twitter_username
       },
       address,
       platform: "github",
