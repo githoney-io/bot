@@ -46,11 +46,11 @@ const paramsValidationFail = async (
   github: GithubFacade,
   issueNumber: number,
   commentId: number,
-  e: ZodIssue[]
+  e: { issues: ZodIssue[]; name: string }
 ) => {
   await github.rejectCommand(commentId);
   let errors = "";
-  for (const issue of e) {
+  for (const issue of e.issues) {
     errors = errors.concat(
       `> Parameter: **${issue.path.join(".")}** - Error: **${
         issue.message
