@@ -144,7 +144,7 @@ export async function attachBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const deadline_ut = Date.now() + deadline * 24 * 60 * 60 * 1000;
+    const deadline_ut = deadline * 24 * 60 * 60 * 1000;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
     const { data: creatorData } = await github.octokit.rest.users.getByUsername(
