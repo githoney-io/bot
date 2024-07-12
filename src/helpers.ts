@@ -64,7 +64,7 @@ const paramsValidationFail = async (
 };
 
 const getRepoLink = (owner: string, repo: string, issue: number) =>
-  `github.com/${owner}/${repo}/issues/${issue}`;
+  `https://github.com/${owner}/${repo}/issues/${issue}`;
 
 // const getSignUrl = (operation: string, contractId: string, address: string) => {
 //   const cid = contractId.replace("#", "%23");
