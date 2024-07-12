@@ -2,8 +2,9 @@ import { Octokit } from "octokit";
 import { createNodeMiddleware } from "@octokit/webhooks";
 import EventSource from "eventsource";
 import { App } from "octokit";
-import { handleComment, handlePRClosed, handlePRMerged } from "./core";
+import { handleComment } from "./core";
 import { callEp } from "./helpers";
+import { handlePRMerged, handlePRClosed } from "./handlers";
 
 export class GithubFacade {
   octokit: Octokit;
