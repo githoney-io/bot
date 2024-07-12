@@ -10,7 +10,6 @@ interface IssueInfo {
   source: string;
   organization: string;
   repository: string;
-  issue: number;
   issueUrl: string;
 }
 

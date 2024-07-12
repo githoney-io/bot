@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import appConfig from "./config/app-config";
 import { ContractInfo } from "./interfaces/core.interface";
 import { NETWORK } from "./utils/constants";
@@ -64,7 +64,7 @@ const paramsValidationFail = async (
 };
 
 const getRepoLink = (owner: string, repo: string, issue: number) =>
-  `github.com/${owner}/${repo}/issues/${issue}`;
+  `https://github.com/${owner}/${repo}/issues/${issue}`;
 
 // const getSignUrl = (operation: string, contractId: string, address: string) => {
 //   const cid = contractId.replace("#", "%23");
@@ -90,11 +90,30 @@ const callEp = async (
     });
 };
 
+const isBadRequest = (e: AxiosError<any, any>) =>
+  e.response?.status && e.response?.status === StatusCodes.BAD_REQUEST;
+
+const isOtherClientError = (e: AxiosError<any, any>) =>
+  e.response?.status &&
+  e.response?.status > StatusCodes.BAD_REQUEST &&
+  e.response?.status < StatusCodes.INTERNAL_SERVER_ERROR;
+
+const getGithubUserData = async (username: string, github: GithubFacade) => {
+  const res = await github.octokit.rest.users.getByUsername({
+    username
+  });
+
+  return res.data;
+};
+
 export {
   ALREADY_EXISTING_BOUNTY,
   ISSUE_WITHOUT_LABELS,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   getRepoLink,
   paramsValidationFail,
-  callEp
+  callEp,
+  isBadRequest,
+  isOtherClientError,
+  getGithubUserData
 };
