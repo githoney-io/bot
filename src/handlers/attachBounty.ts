@@ -4,6 +4,7 @@ import {
   ALREADY_EXISTING_BOUNTY,
   ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
+  getGithubUserData,
   isBadRequest,
   isOtherClientError,
   paramsValidationFail
@@ -30,11 +31,7 @@ export async function attachBounty(
     const deadline_ut = deadline * ONE_DAY_MS;
     const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
-    const { data: creatorData } = await github.octokit.rest.users.getByUsername(
-      {
-        username: creator
-      }
-    );
+    const creatorData = await getGithubUserData(creator, github);
 
     const {
       data: { bounty }

@@ -98,6 +98,14 @@ const isOtherClientError = (e: AxiosError<any, any>) =>
   e.response?.status > StatusCodes.BAD_REQUEST &&
   e.response?.status < StatusCodes.INTERNAL_SERVER_ERROR;
 
+const getGithubUserData = async (username: string, github: GithubFacade) => {
+  const res = await github.octokit.rest.users.getByUsername({
+    username
+  });
+
+  return res.data;
+};
+
 export {
   ALREADY_EXISTING_BOUNTY,
   ISSUE_WITHOUT_LABELS,
@@ -106,5 +114,6 @@ export {
   paramsValidationFail,
   callEp,
   isBadRequest,
-  isOtherClientError
+  isOtherClientError,
+  getGithubUserData
 };

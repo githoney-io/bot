@@ -2,6 +2,7 @@ import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
 import {
   callEp,
+  getGithubUserData,
   isBadRequest,
   isOtherClientError,
   paramsValidationFail
@@ -20,10 +21,7 @@ export async function acceptBounty(
 
     await github.acknowledgeCommand(commentId);
 
-    const { data: assigneeData } =
-      await github.octokit.rest.users.getByUsername({
-        username: assignee
-      });
+    const assigneeData = await getGithubUserData(assignee, github);
 
     const {
       data: { bounty }
@@ -45,6 +43,7 @@ export async function acceptBounty(
       platform: "github",
       prNumber: issueNumber
     });
+    console.debug(bounty);
 
     await github.replyToCommand(
       issueNumber,

@@ -2,6 +2,7 @@ import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
 import {
   callEp,
+  getGithubUserData,
   isBadRequest,
   isOtherClientError,
   paramsValidationFail
@@ -19,9 +20,7 @@ export async function fundBounty(
     const { fundCommentId, fundInfo, funder: username } = params;
     await github.acknowledgeCommand(fundCommentId);
 
-    const { data } = await github.octokit.rest.users.getByUsername({
-      username: username
-    });
+    const data = await getGithubUserData(username, github);
 
     const tokens = fundInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
