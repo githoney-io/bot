@@ -15,6 +15,7 @@ import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import { StatusCodes } from "http-status-codes";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
+import appConfig from "../config/app-config";
 
 // Calls to {BACKEND}/bounty (POST)
 export async function attachBounty(
@@ -63,12 +64,14 @@ export async function attachBounty(
     });
     console.debug(bounty);
 
+    const signUrl = `${appConfig.FRONTEND_URL}/create/${bounty.id}`;
+
     await github.replyToCommand(
       issueNumber,
       `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
         { ...contractInfo, deadline: deadline_ut },
         "someHashContract",
-        "someSignUrl",
+        signUrl,
         network
       )}`
     );

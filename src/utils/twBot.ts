@@ -9,24 +9,23 @@ export const callTwBot = (
   issue: number,
   deadline: number
 ) => {
-  const token = jwt.sign(
-    { GitHubBot: "I'm the GitHubBot" },
-    appConfig.TW_SECRET_KEY
-  );
-  const headers = { authorization: token };
-
-  const twBotRoute = "newBounty";
-  callEp(
-    twBotRoute,
-    {
-      linkToIssue: getRepoLink(organization, repository, issue),
-      amount,
-      deadline: new Date(Date.now() + deadline).toISOString(),
-      contractHash: "someHashContract"
-    },
-    appConfig.TW_BOT_URL,
-    headers
-  )
-    .then((response) => console.log(response))
-    .catch((_e) => console.error("Tweet bot error", _e));
+  // const token = jwt.sign(
+  //   { GitHubBot: "I'm the GitHubBot" },
+  //   appConfig.TW_SECRET_KEY
+  // );
+  // const headers = { authorization: token };
+  // const twBotRoute = "newBounty";
+  // callEp(
+  //   twBotRoute,
+  //   {
+  //     linkToIssue: getRepoLink(organization, repository, issue),
+  //     amount,
+  //     deadline: new Date(Date.now() + deadline).toISOString(),
+  //     contractHash: "someHashContract"
+  //   },
+  //   appConfig.TW_BOT_URL,
+  //   headers
+  // )
+  //   .then((response) => console.log(response))
+  //   .catch((_e) => console.error("Tweet bot error", _e));
 };
