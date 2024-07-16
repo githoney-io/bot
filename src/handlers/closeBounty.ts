@@ -22,7 +22,7 @@ export async function handlePRClosed({
 
     await github.replyToCommand(
       issueNumber,
-      `Cancelling bounty with ID ${bounty.id}` // TODO: Add link to transaction
+      `Cancelling bounty with ID ${bounty.id}. Transaction Hash ${bounty.transactionHash}`
     );
   } catch (e) {
     await github.replyToCommand(
