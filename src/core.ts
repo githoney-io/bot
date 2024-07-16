@@ -1,12 +1,7 @@
 import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
-import {
-  acceptBounty,
-  attachBounty,
-  fundBounty,
-  reclaimBounty
-} from "./handlers";
+import { acceptBounty, attachBounty, fundBounty } from "./handlers";
 
 export async function handleComment(
   github: GithubFacade,
@@ -47,7 +42,7 @@ export async function handleComment(
         issueUrl: issue.html_url,
         labels: []
       };
-      const contractInfo = {
+      const bountyIdInfo = {
         amount: parsed.amount,
         deadline: parsed.deadline,
         address: parsed.address,
@@ -56,7 +51,7 @@ export async function handleComment(
       const commentId = comment.id;
 
       await attachBounty(
-        { creator: comment.user.login, issueInfo, contractInfo, commentId },
+        { creator: comment.user.login, issueInfo, bountyIdInfo, commentId },
         github
       );
       break;
@@ -80,20 +75,9 @@ export async function handleComment(
         {
           issueNumber: issue.number,
           commentId: comment.id,
-          contractId: parsed.contract,
+          bountyId: parsed.bountyId,
           address: parsed.address,
           assignee: comment.user.login
-        },
-        github
-      );
-      break;
-    case "reclaim-bounty":
-      await reclaimBounty(
-        {
-          issueNumber: issue.number,
-          commentId: comment.id,
-          contractId: parsed.contract,
-          address: parsed.address
         },
         github
       );

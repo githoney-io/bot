@@ -23,9 +23,9 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { creator, issueInfo, contractInfo, commentId } = params;
+    const { creator, issueInfo, bountyIdInfo, commentId } = params;
     const { labels, source, number: issueNumber } = issueInfo;
-    const { amount, deadline, address, network } = contractInfo;
+    const { amount, deadline, address, network } = bountyIdInfo;
 
     await github.acknowledgeCommand(commentId);
 
@@ -69,8 +69,8 @@ export async function attachBounty(
     await github.replyToCommand(
       issueNumber,
       `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
-        { ...contractInfo, deadline: deadline_ut },
-        "someHashContract",
+        { ...bountyIdInfo, deadline: deadline_ut },
+        String(bounty.id),
         signUrl,
         network
       )}`
@@ -107,9 +107,9 @@ export async function attachBounty(
     } else {
       await github.replyToCommand(
         params.issueInfo.number,
-        "There was an error creating the contract. Please try again."
+        "There was an error creating the bountyId. Please try again."
       );
-      console.error(chalk.red(`Error creating contract. ${e}`));
+      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }

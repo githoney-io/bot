@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { callEp } from "../helpers";
 import { PRHandler } from "../interfaces/core.interface";
+import { IBountyCreate } from "../interfaces/bounty.interface";
 
 // Calls to {PUBLIC_URL}/bounty/cancel (POST)
 export async function handlePRClosed({
@@ -10,7 +11,9 @@ export async function handlePRClosed({
   repoName
 }: PRHandler) {
   try {
-    const res = await callEp("bounty/cancel", {
+    const {
+      data: { bounty }
+    }: IBountyCreate = await callEp("bounty/cancel", {
       prNumber: issueNumber,
       orgName,
       repoName,
@@ -19,13 +22,13 @@ export async function handlePRClosed({
 
     await github.replyToCommand(
       issueNumber,
-      `Cancelling contract with ID **contractId**. You can see the cancel transaction in this [link](txUrltxId)`
+      `Cancelling bounty with ID ${bounty.id}` // TODO: Add link to transaction
     );
   } catch (e) {
     await github.replyToCommand(
       issueNumber,
-      "There was an error cancelling the contract. Please try again."
+      "There was an error cancelling the bountyId. Please try again."
     );
-    console.error(chalk.red(`Error cancelling contract: ${e}`));
+    console.error(chalk.red(`Error cancelling bountyId: ${e}`));
   }
 }

@@ -21,7 +21,7 @@ export const callTwBot = (
   //     linkToIssue: getRepoLink(organization, repository, issue),
   //     amount,
   //     deadline: new Date(Date.now() + deadline).toISOString(),
-  //     contractHash: "someHashContract"
+  //     bountyIdHash: "someHashBounty"
   //   },
   //   appConfig.TW_BOT_URL,
   //   headers

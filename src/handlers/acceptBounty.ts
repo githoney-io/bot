@@ -18,7 +18,7 @@ export async function acceptBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueNumber, commentId, contractId, address, assignee } = params;
+    const { issueNumber, commentId, bountyId, address, assignee } = params;
 
     await github.acknowledgeCommand(commentId);
 
@@ -27,7 +27,7 @@ export async function acceptBounty(
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty/assign", {
-      contract: contractId,
+      bountyId: bountyId,
       assignee: {
         name: assigneeData.name,
         username: assigneeData.login,
@@ -50,7 +50,7 @@ export async function acceptBounty(
 
     await github.replyToCommand(
       issueNumber,
-      `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. Sign the transaction here ${signUrl}. You will be able to claim the reward once this PR gets merged.`
+      `Bounty has been accepted and linked to this PR. The bounty id is ${bounty.id}. Sign the transaction here ${signUrl}. You will be able to claim the reward once this PR gets merged.`
     );
   } catch (e) {
     if (e instanceof AxiosError) {

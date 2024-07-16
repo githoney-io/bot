@@ -72,9 +72,9 @@ export async function fundBounty(
     } else {
       await github.replyToCommand(
         params.fundInfo.issue,
-        "There was an error funding the contract. Please try again."
+        "There was an error funding the bountyId. Please try again."
       );
-      console.error(chalk.red(`Error creating contract. ${e}`));
+      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }
