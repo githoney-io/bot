@@ -10,6 +10,7 @@ import {
 import { FundBountyParams } from "../interfaces/core.interface";
 import { ONE_ADA_IN_LOVELACE } from "../utils/constants";
 import chalk from "chalk";
+import appConfig from "../config/app-config";
 
 // Calls to {PUBLIC_URL}/bounty/sponsor (POST)
 export async function fundBounty(
@@ -24,12 +25,14 @@ export async function fundBounty(
 
     const tokens = fundInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
-      return name.toLowerCase() === "ADA"
+      return name.toLowerCase() === "ada"
         ? { name, amount: Number(amount) * ONE_ADA_IN_LOVELACE }
         : { name, amount: Number(amount) };
     });
 
-    const res = await callEp("bounty/sponsor", {
+    const {
+      data: { bounty, walletId }
+    } = await callEp("bounty/sponsor", {
       address: fundInfo.address,
       tokens,
       issueNumber: fundInfo.issue,
@@ -50,9 +53,10 @@ export async function fundBounty(
       repoName: fundInfo.repository
     });
 
+    const signUrl = `${appConfig.FRONTEND_URL}/funding/${bounty.id}/${walletId}`;
     await github.replyToCommand(
       fundInfo.issue,
-      `Bounty has been funded!. You can see the transaction [here](txUrl/txId)`
+      `Bounty funding has been created. You can sign the transaction here ${signUrl}.`
     );
   } catch (e) {
     if (e instanceof AxiosError) {
@@ -72,9 +76,9 @@ export async function fundBounty(
     } else {
       await github.replyToCommand(
         params.fundInfo.issue,
-        "There was an error funding the contract. Please try again."
+        "There was an error funding the bountyId. Please try again."
       );
-      console.error(chalk.red(`Error creating contract. ${e}`));
+      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }

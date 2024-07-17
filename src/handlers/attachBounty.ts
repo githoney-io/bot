@@ -15,6 +15,7 @@ import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import { StatusCodes } from "http-status-codes";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
+import appConfig from "../config/app-config";
 
 // Calls to {BACKEND}/bounty (POST)
 export async function attachBounty(
@@ -22,9 +23,9 @@ export async function attachBounty(
   github: GithubFacade
 ) {
   try {
-    const { creator, issueInfo, contractInfo, commentId } = params;
+    const { creator, issueInfo, bountyIdInfo, commentId } = params;
     const { labels, source, number: issueNumber } = issueInfo;
-    const { amount, deadline, address, network } = contractInfo;
+    const { amount, deadline, address, network } = bountyIdInfo;
 
     await github.acknowledgeCommand(commentId);
 
@@ -63,12 +64,14 @@ export async function attachBounty(
     });
     console.debug(bounty);
 
+    const signUrl = `${appConfig.FRONTEND_URL}/create/${bounty.id}`;
+
     await github.replyToCommand(
       issueNumber,
       `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
-        { ...contractInfo, deadline: deadline_ut },
-        "someHashContract",
-        "someSignUrl",
+        { ...bountyIdInfo, deadline: deadline_ut },
+        String(bounty.id),
+        signUrl,
         network
       )}`
     );
@@ -104,9 +107,9 @@ export async function attachBounty(
     } else {
       await github.replyToCommand(
         params.issueInfo.number,
-        "There was an error creating the contract. Please try again."
+        "There was an error creating the bountyId. Please try again."
       );
-      console.error(chalk.red(`Error creating contract. ${e}`));
+      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }

@@ -13,7 +13,7 @@ interface IssueInfo {
   issueUrl: string;
 }
 
-interface ContractInfo {
+interface BountyInfo {
   amount: number;
   deadline: number;
   address: string;
@@ -23,7 +23,7 @@ interface ContractInfo {
 interface AttachBountyParams {
   creator: string;
   issueInfo: IssueInfo;
-  contractInfo: ContractInfo;
+  bountyIdInfo: BountyInfo;
   commentId: number;
 }
 
@@ -42,7 +42,7 @@ interface FundBountyParams {
 interface AcceptBountyParams {
   issueNumber: number;
   commentId: number;
-  contractId: string;
+  bountyId: number;
   address: string;
   assignee: string;
 }
@@ -50,7 +50,7 @@ interface AcceptBountyParams {
 interface ReclaimBountyParams {
   issueNumber: number;
   commentId: number;
-  contractId: string;
+  bountyId: number;
   address: string;
 }
 
@@ -66,6 +66,6 @@ export {
   FundBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
-  ContractInfo,
+  BountyInfo,
   PRHandler
 };

@@ -10,6 +10,7 @@ import {
 import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AcceptBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
+import appConfig from "../config/app-config";
 
 // Calls to {PUBLIC_URL}/bounty/assign (POST)
 export async function acceptBounty(
@@ -17,7 +18,7 @@ export async function acceptBounty(
   github: GithubFacade
 ) {
   try {
-    const { issueNumber, commentId, contractId, address, assignee } = params;
+    const { issueNumber, commentId, bountyId, address, assignee } = params;
 
     await github.acknowledgeCommand(commentId);
 
@@ -26,7 +27,7 @@ export async function acceptBounty(
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty/assign", {
-      contract: contractId,
+      bountyId: bountyId,
       assignee: {
         name: assigneeData.name,
         username: assigneeData.login,
@@ -45,9 +46,11 @@ export async function acceptBounty(
     });
     console.debug(bounty);
 
+    const signUrl = `${appConfig.FRONTEND_URL}/assign/${bounty.id}`;
+
     await github.replyToCommand(
       issueNumber,
-      `Bounty has been accepted and linked to this PR. The contract id is ${contractId}. See tx at txUrl/txId. You will be able to claim the reward once this PR gets merged.`
+      `Bounty has been accepted and linked to this PR. The bounty id is ${bounty.id}. Sign the transaction here ${signUrl}. You will be able to claim the reward once this PR gets merged.`
     );
   } catch (e) {
     if (e instanceof AxiosError) {

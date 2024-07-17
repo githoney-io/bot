@@ -14,6 +14,7 @@ interface IBounty {
   creatorId: number;
   statusId: number;
   sourceId: number;
+  transactionHash: string;
 }
 
 export { IBountyCreate };

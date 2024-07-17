@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import appConfig from "./config/app-config";
-import { ContractInfo } from "./interfaces/core.interface";
+import { BountyInfo } from "./interfaces/core.interface";
 import { NETWORK } from "./utils/constants";
 import { GithubFacade } from "./adapters";
 import { ZodIssue } from "zod";
@@ -19,8 +19,8 @@ const ISSUE_WITHOUT_LABELS = `
 `;
 
 const ATTACH_BOUNTY_RESPONSE_COMMENT = (
-  params: ContractInfo,
-  contractId: string,
+  params: BountyInfo,
+  bountyId: string,
   signUrl: string,
   network: NETWORK
 ) => `
@@ -35,11 +35,11 @@ const ATTACH_BOUNTY_RESPONSE_COMMENT = (
   > Work deadline: **${new Date(params.deadline).toUTCString()}**
   > Maintainer address: **${params.address.slice(0, 20)}..**
   
-  The contract id is \`${contractId}\`
+  The bounty id is \`${bountyId}\`
   
   You can check the on-chain data on [...]
   
-  The next step is to deposit the reward amount in the contract. You can use this [link](${signUrl}) to execute the transaction.
+  The next step is to deposit the reward amount in the bountyId. You can use this [link](${signUrl}) to execute the transaction.
   `;
 
 const paramsValidationFail = async (
@@ -66,8 +66,8 @@ const paramsValidationFail = async (
 const getRepoLink = (owner: string, repo: string, issue: number) =>
   `https://github.com/${owner}/${repo}/issues/${issue}`;
 
-// const getSignUrl = (operation: string, contractId: string, address: string) => {
-//   const cid = contractId.replace("#", "%23");
+// const getSignUrl = (operation: string, bountyId: string, address: string) => {
+//   const cid = bountyId.replace("#", "%23");
 //   return `${appConfig.PUBLIC_URL}/sign?operation=${operation}&cid=${cid}&address=${address}`;
 // };
 
