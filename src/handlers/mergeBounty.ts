@@ -22,7 +22,7 @@ export async function handlePRMerged({
       platform: "github"
     });
     console.debug(bounty);
-    const signUrl = `${appConfig.FRONTEND_URL}/claim/${bounty.id}`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/claim`;
 
     await github.replyToCommand(
       issueNumber,

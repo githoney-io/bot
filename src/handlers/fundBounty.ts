@@ -53,7 +53,7 @@ export async function fundBounty(
       repoName: fundInfo.repository
     });
 
-    const signUrl = `${appConfig.FRONTEND_URL}/funding/${bounty.id}/${walletId}`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?walletId=${walletId}`;
     await github.replyToCommand(
       fundInfo.issue,
       `Bounty funding has been created. You can sign the transaction here ${signUrl}.`
