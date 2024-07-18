@@ -14,6 +14,8 @@ export interface AppConfig {
   TW_SECRET_KEY: string;
   BACKEND_URL: string;
   FRONTEND_URL: string;
+  BACKEND_API_KEY: string;
+  SOURCE: string;
 }
 
 const envSchema = z.object({
@@ -25,7 +27,9 @@ const envSchema = z.object({
   TW_BOT_URL: z.string().url(),
   TW_SECRET_KEY: z.string(),
   BACKEND_URL: z.string().url(),
-  FRONTEND_URL: z.string().url()
+  FRONTEND_URL: z.string().url(),
+  BACKEND_API_KEY: z.string().min(1),
+  SOURCE: z.string().min(1)
 });
 
 const nonValidatedAppConfig: AppConfig = {
@@ -38,7 +42,9 @@ const nonValidatedAppConfig: AppConfig = {
   TW_BOT_URL: process.env.TW_BOT_URL as string,
   TW_SECRET_KEY: process.env.TW_SECRET_KEY as string,
   BACKEND_URL: process.env.BACKEND_URL as string,
-  FRONTEND_URL: process.env.FRONTEND_URL as string
+  FRONTEND_URL: process.env.FRONTEND_URL as string,
+  BACKEND_API_KEY: process.env.BACKEND_API_KEY as string,
+  SOURCE: process.env.SOURCE as string
 };
 
 export const appConfig = envSchema.parse(nonValidatedAppConfig);

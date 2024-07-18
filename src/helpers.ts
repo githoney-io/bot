@@ -75,7 +75,10 @@ const callEp = async (
   name: string,
   param: any,
   url: string = appConfig.BACKEND_URL,
-  headers: Record<string, any> = {}
+  headers: Record<string, any> = {
+    "x-api-key": appConfig.BACKEND_API_KEY,
+    "x-source": appConfig.SOURCE
+  }
 ): Promise<any> => {
   return axios
     .post(`${url}/${name}`, param, { headers: headers })
