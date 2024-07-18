@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
 import appConfig from "../config/app-config";
-import { callEp, getRepoLink } from "../helpers";
+import { getRepoLink } from "../helpers";
+import axios from "axios";
 
 export const callTwBot = (
   amount: number,
@@ -9,23 +9,20 @@ export const callTwBot = (
   issue: number,
   deadline: number
 ) => {
-  // const token = jwt.sign(
-  //   { GitHubBot: "I'm the GitHubBot" },
-  //   appConfig.TW_SECRET_KEY
-  // );
-  // const headers = { authorization: token };
-  // const twBotRoute = "newBounty";
-  // callEp(
-  //   twBotRoute,
-  //   {
-  //     linkToIssue: getRepoLink(organization, repository, issue),
-  //     amount,
-  //     deadline: new Date(Date.now() + deadline).toISOString(),
-  //     bountyIdHash: "someHashBounty"
-  //   },
-  //   appConfig.TW_BOT_URL,
-  //   headers
-  // )
-  //   .then((response) => console.log(response))
-  //   .catch((_e) => console.error("Tweet bot error", _e));
+  const headers = { "x-api-key": appConfig.TW_SECRET_KEY };
+  const twBotRoute = "newBounty";
+
+  axios
+    .post(
+      `${appConfig.TW_BOT_URL}/${twBotRoute}`,
+      {
+        contractHash: "todo",
+        amount,
+        linkToIssue: getRepoLink(organization, repository, issue),
+        deadline: new Date(Date.now() + deadline).toISOString()
+      },
+      { headers }
+    )
+    .then((response) => console.log(response))
+    .catch((e) => console.error("Tweet bot error", e));
 };
