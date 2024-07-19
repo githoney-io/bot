@@ -26,7 +26,7 @@ export async function fundBounty(
     const tokens = fundInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
       return name.toLowerCase() === "ada"
-        ? { name, amount: Number(amount) * ONE_ADA_IN_LOVELACE }
+        ? { name, amount: Number(amount) }
         : { name, amount: Number(amount) };
     });
 
