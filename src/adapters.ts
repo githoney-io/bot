@@ -71,7 +71,6 @@ export function startBot(params: BotParams) {
     }
   });
 
-  // TODO: add installation.repositories.{added, removed} events
   app.webhooks.on("installation", async ({ payload }) => {
     try {
       if (payload.action === "created") {
@@ -85,7 +84,7 @@ export function startBot(params: BotParams) {
 
         console.log("Installation event started");
         await callEp("organization", {
-          name: payload.installation.account.name,
+          name: data.name,
           username: payload.installation.account.login,
           avatarUri: payload.installation.account.avatar_url,
           inPlatformId: payload.installation.account.id.toString(),
@@ -108,6 +107,25 @@ export function startBot(params: BotParams) {
       }
     } catch (err) {
       console.error("Installation event error: ", err);
+    }
+  });
+
+  app.webhooks.on("installation_repositories.added", async ({ payload }) => {
+    try {
+      const repositories = payload.repositories_added.map((repo) => ({
+        name: repo.name,
+        url: `https://github.com/${repo.full_name}`
+      }));
+
+      console.log("Installation repositories event started");
+      await callEp("repository", {
+        repositories,
+        organizationName: payload.installation.account.login,
+        source: "github"
+      });
+      console.log("Installation repositories event completed");
+    } catch (err) {
+      console.error("Installation repositories event error: ", err);
     }
   });
 
