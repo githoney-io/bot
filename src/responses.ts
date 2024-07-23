@@ -80,12 +80,6 @@ const ALREADY_ASSIGNED_BOUNTY = `
   This bounty has already been assigned to someone.
 `;
 
-const ALREADY_COMPLETED_BOUNTY = `
-  ### ⚠️ Warning ⚠️
-
-  This bounty has already been completed.
-`;
-
 const HELP_COMMAND = `
   Hi! I'm the **Githoney Bot**🤖. Here are the commands you can use:
 
@@ -118,7 +112,6 @@ export const Responses = {
   UNKNOWN_COMMAND,
   BOUNTY_NOT_FOUND,
   ALREADY_ASSIGNED_BOUNTY,
-  ALREADY_COMPLETED_BOUNTY,
   HELP_COMMAND,
   INTERNAL_SERVER_ERROR,
   PLEASE_USE_ADA,
