@@ -70,6 +70,11 @@ export async function acceptBounty(
           params.issueNumber,
           Responses.ALREADY_ASSIGNED_BOUNTY
         );
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_NOT_FOUND) {
+        await github.replyToCommand(
+          params.issueNumber,
+          Responses.BOUNTY_NOT_FOUND
+        );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(params.issueNumber, e.response?.data.error);
       }

@@ -11,6 +11,7 @@ import { FundBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
+import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/sponsor (POST)
 export async function fundBounty(
@@ -74,6 +75,11 @@ export async function fundBounty(
           params.fundInfo.issue,
           params.fundCommentId,
           e.response?.data.error
+        );
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_NOT_FOUND) {
+        await github.replyToCommand(
+          params.fundInfo.issue,
+          Responses.BOUNTY_NOT_FOUND
         );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
