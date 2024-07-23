@@ -2,6 +2,7 @@ import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import { acceptBounty, attachBounty, fundBounty } from "./handlers";
+import { Responses } from "./responses";
 
 export async function handleComment(
   github: GithubFacade,
@@ -10,7 +11,7 @@ export async function handleComment(
 ) {
   const commentBody = comment.body.trim();
 
-  if (!commentBody.includes("/githoney")) {
+  if (!commentBody.startsWith("/githoney")) {
     console.debug("Skipping because not directed to bot");
     return;
   }
@@ -26,10 +27,14 @@ export async function handleComment(
   if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
     github.rejectCommand(comment.id);
+    github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
     return;
   }
 
   switch (parsed._[0]) {
+    case "help":
+      github.replyToCommand(issue.number, Responses.HELP_COMMAND);
+      break;
     case "attach-bounty":
       const issueInfo = {
         number: issue.number,
@@ -84,6 +89,7 @@ export async function handleComment(
       break;
     default:
       console.warn("unknown command", parsed);
+      github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
       github.rejectCommand(comment.id);
   }
 }

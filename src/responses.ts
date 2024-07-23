@@ -65,7 +65,7 @@ const UNKNOWN_COMMAND = `
 
   I'm sorry, I don't understand that command. 😔
 
-  Please use the \`/githoney --help\` command to see the available commands.
+  Please use the \`/githoney help\` command to see the available commands.
 `;
 
 const BOUNTY_NOT_FOUND = `
@@ -87,7 +87,7 @@ const ALREADY_COMPLETED_BOUNTY = `
 `;
 
 const HELP_COMMAND = `
-  Hi! I'm the ¨*Githoney Bot**🤖. Here are the commands you can use:
+  Hi! I'm the **Githoney Bot**🤖. Here are the commands you can use:
 
   > Create ...
 `;
