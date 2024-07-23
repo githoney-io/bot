@@ -9,7 +9,7 @@ import {
 } from "../helpers";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AttachBountyParams } from "../interfaces/core.interface";
-import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
+import { BOT_CODES, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import { StatusCodes } from "http-status-codes";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
@@ -95,7 +95,7 @@ export async function attachBounty(
           params.commentId,
           e.response?.data.error
         );
-      } else if (e.response?.status === StatusCodes.PRECONDITION_FAILED) {
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_ALREADY_EXIST) {
         await github.replyToCommand(
           params.issueInfo.number,
           Responses.ALREADY_EXISTING_BOUNTY
@@ -103,7 +103,7 @@ export async function attachBounty(
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
           params.issueInfo.number,
-          e.response?.data.error
+          Responses.BACKEND_ERROR(e.response?.data.error)
         );
       }
     } else {

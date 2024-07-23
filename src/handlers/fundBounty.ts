@@ -8,9 +8,9 @@ import {
   paramsValidationFail
 } from "../helpers";
 import { FundBountyParams } from "../interfaces/core.interface";
-import { ONE_ADA_IN_LOVELACE } from "../utils/constants";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
+import { Responses } from "../responses";
 
 // Calls to {BACKEND_URL}/bounty/sponsor (POST)
 export async function fundBounty(
@@ -23,12 +23,18 @@ export async function fundBounty(
 
     const data = await getGithubUserData(username, github);
 
-    const tokens = fundInfo.tokens.map((t) => {
+    const tokens = fundInfo.tokens.map(async (t) => {
       const [name, amount] = t.split("=");
       return name.toLowerCase() === "ada"
         ? { name, amount: Number(amount) }
-        : { name, amount: Number(amount) };
+        : undefined;
     });
+
+    // TODO: remove this when the backend accepts other currencies
+    if (tokens.some((t) => t === undefined)) {
+      await github.replyToCommand(fundInfo.issue, Responses.PLEASE_USE_ADA);
+      return;
+    }
 
     const {
       data: { bounty, walletId }
@@ -56,9 +62,11 @@ export async function fundBounty(
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?walletId=${walletId}`;
     await github.replyToCommand(
       fundInfo.issue,
-      `Bounty funding has been created. You can sign the transaction here ${signUrl}.`
+      Responses.FUND_BOUNTY_SUCCESS(signUrl)
     );
   } catch (e) {
+    console.error(chalk.red(`Error funding bounty. ${e}`));
+
     if (e instanceof AxiosError) {
       if (isBadRequest(e)) {
         await paramsValidationFail(
@@ -70,15 +78,14 @@ export async function fundBounty(
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
           params.fundInfo.issue,
-          e.response?.data.error
+          Responses.BACKEND_ERROR(e.response?.data.error)
         );
       }
     } else {
       await github.replyToCommand(
         params.fundInfo.issue,
-        "There was an error funding the bountyId. Please try again."
+        Responses.INTERNAL_SERVER_ERROR
       );
-      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }

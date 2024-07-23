@@ -11,6 +11,8 @@ import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AcceptBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
+import { Responses } from "../responses";
+import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/assign (POST)
 export async function acceptBounty(
@@ -50,9 +52,11 @@ export async function acceptBounty(
 
     await github.replyToCommand(
       issueNumber,
-      `Bounty has been accepted and linked to this PR. The bounty id is ${bounty.id}. Sign the transaction here ${signUrl}. You will be able to claim the reward once this PR gets merged.`
+      Responses.ACCEPT_BOUNTY_SUCCESS(signUrl)
     );
   } catch (e) {
+    console.error(chalk.red(`Error assigning developer. ${e}`));
+
     if (e instanceof AxiosError) {
       if (isBadRequest(e)) {
         await paramsValidationFail(
@@ -61,15 +65,19 @@ export async function acceptBounty(
           params.commentId,
           e.response?.data.error
         );
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_TAKEN) {
+        await github.replyToCommand(
+          params.issueNumber,
+          Responses.ALREADY_ASSIGNED_BOUNTY
+        );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(params.issueNumber, e.response?.data.error);
       }
     } else {
       await github.replyToCommand(
         params.issueNumber,
-        "There was an error assigning the developer. Please try again."
+        Responses.INTERNAL_SERVER_ERROR
       );
-      console.error(chalk.red(`Error assigning developer. ${e}`));
     }
   }
 }

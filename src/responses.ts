@@ -92,10 +92,18 @@ const HELP_COMMAND = `
   > Create ...
 `;
 
+// Bot error, not user error, not backend error.
 const INTERNAL_SERVER_ERROR = `
   ### ⚠ Sorry, I'm having some trouble right now. ⚠
 
   Please try again later.
+`;
+
+// Backend error, DB inconsistency, wrong parameter from bot, etc.
+const BACKEND_ERROR = (error: string) => `
+  ### ⚠ Sorry, the service is having some trouble right now. ⚠
+
+  ${error}
 `;
 
 const PLEASE_USE_ADA = `
@@ -118,5 +126,6 @@ export const Responses = {
   ACCEPT_BOUNTY_SUCCESS,
   MERGE_BOUNTY_SUCCESS,
   FUND_BOUNTY_SUCCESS,
-  CREATE_BOUNTY_SUCCESS
+  CREATE_BOUNTY_SUCCESS,
+  BACKEND_ERROR
 };
