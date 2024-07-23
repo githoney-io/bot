@@ -3,7 +3,7 @@ import { callEp } from "../helpers";
 import { PRHandler } from "../interfaces/core.interface";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 
-// Calls to {PUBLIC_URL}/bounty/cancel (POST)
+// Calls to {BACKEND_URL}/bounty/cancel (POST)
 export async function handlePRClosed({
   facade: github,
   issueNumber,

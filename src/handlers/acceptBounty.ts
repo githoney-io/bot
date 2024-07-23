@@ -12,7 +12,7 @@ import { AcceptBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 
-// Calls to {PUBLIC_URL}/bounty/assign (POST)
+// Calls to {BACKEND_URL}/bounty/assign (POST)
 export async function acceptBounty(
   params: AcceptBountyParams,
   github: GithubFacade

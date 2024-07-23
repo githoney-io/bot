@@ -1,8 +1,6 @@
 import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
 import {
-  ALREADY_EXISTING_BOUNTY,
-  ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
   getGithubUserData,
   isBadRequest,
@@ -16,8 +14,9 @@ import { StatusCodes } from "http-status-codes";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
+import { Responses } from "../responses";
 
-// Calls to {BACKEND}/bounty (POST)
+// Calls to {BACKEND_URL}/bounty (POST)
 export async function attachBounty(
   params: AttachBountyParams,
   github: GithubFacade
@@ -65,15 +64,16 @@ export async function attachBounty(
     console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create/`;
-
     await github.replyToCommand(
       issueNumber,
-      `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
-        { ...bountyIdInfo, deadline: deadline_ut },
-        String(bounty.id),
+      Responses.CREATE_BOUNTY_SUCCESS({
+        address,
+        amount,
+        bountyId: bounty.id,
+        deadline,
         signUrl,
-        network
-      )}`
+        isDev: network === "preprod"
+      })
     );
 
     callTwBot(
@@ -84,6 +84,8 @@ export async function attachBounty(
       deadline_ut
     );
   } catch (e) {
+    console.error(chalk.red(`Error creating bounty. ${e}`));
+
     if (e instanceof AxiosError) {
       if (isBadRequest(e)) {
         // If the error is a 400, it means that the validation failed
@@ -96,7 +98,7 @@ export async function attachBounty(
       } else if (e.response?.status === StatusCodes.PRECONDITION_FAILED) {
         await github.replyToCommand(
           params.issueInfo.number,
-          ALREADY_EXISTING_BOUNTY
+          Responses.ALREADY_EXISTING_BOUNTY
         );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
@@ -107,9 +109,8 @@ export async function attachBounty(
     } else {
       await github.replyToCommand(
         params.issueInfo.number,
-        "There was an error creating the bountyId. Please try again."
+        Responses.INTERNAL_SERVER_ERROR
       );
-      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }

@@ -12,7 +12,7 @@ import { ONE_ADA_IN_LOVELACE } from "../utils/constants";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 
-// Calls to {PUBLIC_URL}/bounty/sponsor (POST)
+// Calls to {BACKEND_URL}/bounty/sponsor (POST)
 export async function fundBounty(
   params: FundBountyParams,
   github: GithubFacade

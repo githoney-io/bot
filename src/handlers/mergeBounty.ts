@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import appConfig from "../config/app-config";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 
-// Calls to {PUBLIC_URL}/bounty/merge (POST)
+// Calls to {BACKEND_URL}/bounty/merge (POST)
 export async function handlePRMerged({
   facade: github,
   issueNumber,
