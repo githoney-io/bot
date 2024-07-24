@@ -106,11 +106,21 @@ const PLEASE_USE_ADA = `
   We're working on adding support for other currencies.
 `;
 
+const WRONG_COMMAND_USE = `
+  ### Sorry, you can't use this command here. 😔
+
+  Remember, you can only use the:
+  - \`attach-bounty\` command in issues.
+  - \`fund-bounty\` command in issues.
+  - \`accept-bounty\` command in PRs.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
   UNKNOWN_COMMAND,
   BOUNTY_NOT_FOUND,
+  WRONG_COMMAND_USE,
   ALREADY_ASSIGNED_BOUNTY,
   HELP_COMMAND,
   INTERNAL_SERVER_ERROR,

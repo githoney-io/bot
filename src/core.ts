@@ -26,16 +26,22 @@ export async function handleComment(
 
   if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
-    github.rejectCommand(comment.id);
-    github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
+    await github.rejectCommand(comment.id);
+    await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
     return;
   }
 
   switch (parsed._[0]) {
     case "help":
-      github.replyToCommand(issue.number, Responses.HELP_COMMAND);
+      await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
     case "attach-bounty":
+      if ("pull_request" in issue)
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
       const issueInfo = {
         number: issue.number,
         title: issue.title,
@@ -61,6 +67,12 @@ export async function handleComment(
       );
       break;
     case "fund-bounty":
+      if ("pull_request" in issue)
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
       const fundInfo = {
         issue: issue.number,
         tokens: parsed.tokens?.split("&") || [],
@@ -76,6 +88,12 @@ export async function handleComment(
       );
       break;
     case "accept-bounty":
+      if (!("pull_request" in issue))
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
       await acceptBounty(
         {
           issueNumber: issue.number,
@@ -89,7 +107,8 @@ export async function handleComment(
       break;
     default:
       console.warn("unknown command", parsed);
-      github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
-      github.rejectCommand(comment.id);
+      await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
+      await github.rejectCommand(comment.id);
+      break;
   }
 }
