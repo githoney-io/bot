@@ -2,8 +2,10 @@ import chalk from "chalk";
 import { callEp } from "../helpers";
 import { PRHandler } from "../interfaces/core.interface";
 import { IBountyCreate } from "../interfaces/bounty.interface";
+import { Responses } from "../responses";
+import { AxiosError } from "axios";
 
-// Calls to {PUBLIC_URL}/bounty/cancel (POST)
+// Calls to {BACKEND_URL}/bounty/cancel (POST)
 export async function handlePRClosed({
   facade: github,
   issueNumber,
@@ -20,15 +22,17 @@ export async function handlePRClosed({
       platform: "github"
     });
 
-    await github.replyToCommand(
-      issueNumber,
-      `Cancelling bounty with ID ${bounty.id}. Transaction Hash ${bounty.transactionHash}`
-    );
+    await github.replyToCommand(issueNumber, Responses.CLOSE_BOUNTY_SUCCESS);
   } catch (e) {
-    await github.replyToCommand(
-      issueNumber,
-      "There was an error cancelling the bountyId. Please try again."
-    );
-    console.error(chalk.red(`Error cancelling bountyId: ${e}`));
+    console.error(chalk.red(`Error handling cancel event: ${e}`));
+
+    if (e instanceof AxiosError) {
+      await github.replyToCommand(
+        issueNumber,
+        Responses.BACKEND_ERROR(e.response?.data.error)
+      );
+    } else {
+      await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
+    }
   }
 }

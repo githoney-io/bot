@@ -1,8 +1,6 @@
 import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
 import {
-  ALREADY_EXISTING_BOUNTY,
-  ATTACH_BOUNTY_RESPONSE_COMMENT,
   callEp,
   getGithubUserData,
   isBadRequest,
@@ -11,13 +9,14 @@ import {
 } from "../helpers";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AttachBountyParams } from "../interfaces/core.interface";
-import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
+import { BOT_CODES, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import { StatusCodes } from "http-status-codes";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
+import { Responses } from "../responses";
 
-// Calls to {BACKEND}/bounty (POST)
+// Calls to {BACKEND_URL}/bounty (POST)
 export async function attachBounty(
   params: AttachBountyParams,
   github: GithubFacade
@@ -65,15 +64,16 @@ export async function attachBounty(
     console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create/`;
-
     await github.replyToCommand(
       issueNumber,
-      `## This is a mock response: ${ATTACH_BOUNTY_RESPONSE_COMMENT(
-        { ...bountyIdInfo, deadline: deadline_ut },
-        String(bounty.id),
+      Responses.CREATE_BOUNTY_SUCCESS({
+        address,
+        amount,
+        bountyId: bounty.id,
+        deadline,
         signUrl,
-        network
-      )}`
+        isDev: network === "preprod"
+      })
     );
 
     callTwBot(
@@ -84,6 +84,8 @@ export async function attachBounty(
       deadline_ut
     );
   } catch (e) {
+    console.error(chalk.red(`Error creating bounty. ${e}`));
+
     if (e instanceof AxiosError) {
       if (isBadRequest(e)) {
         // If the error is a 400, it means that the validation failed
@@ -93,23 +95,22 @@ export async function attachBounty(
           params.commentId,
           e.response?.data.error
         );
-      } else if (e.response?.status === StatusCodes.PRECONDITION_FAILED) {
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_ALREADY_EXIST) {
         await github.replyToCommand(
           params.issueInfo.number,
-          ALREADY_EXISTING_BOUNTY
+          Responses.ALREADY_EXISTING_BOUNTY
         );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
           params.issueInfo.number,
-          e.response?.data.error
+          Responses.BACKEND_ERROR(e.response?.data.error)
         );
       }
     } else {
       await github.replyToCommand(
         params.issueInfo.number,
-        "There was an error creating the bountyId. Please try again."
+        Responses.INTERNAL_SERVER_ERROR
       );
-      console.error(chalk.red(`Error creating bountyId. ${e}`));
     }
   }
 }
