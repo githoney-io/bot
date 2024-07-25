@@ -48,7 +48,7 @@ export async function acceptBounty(
     });
     console.debug(bounty);
 
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/assign/`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/assign?addr=${address}`;
 
     await github.replyToCommand(
       issueNumber,
