@@ -42,19 +42,23 @@ const ACCEPT_BOUNTY_SUCCESS = (signUrl: string) => `
   You will be able to claim the reward once this PR gets merged.
 `;
 
-const MERGE_BOUNTY_SUCCESS = (reclaimUrl: string) => `
+const MERGE_BOUNTY_SUCCESS = (reclaimUrl: string, mergeTxUrl: string) => `
   ### 🎉 The bounty has been merged! 🎉
 
-  You can now claim the reward clicking [here](${reclaimUrl}).
+  You can see the transaction [here](${mergeTxUrl}).
+
+  Claim your reward clicking [here](${reclaimUrl}).
 `;
 
-const CLOSE_BOUNTY_SUCCESS = `
+const CLOSE_BOUNTY_SUCCESS = (closeTxUrl: string) => `
   Sorry, your PR was not accepted. 😢
+
+  You can see the transaction [here](${closeTxUrl}).
 `;
 
 const PARAMETERS_WRONG = (errors: string) => `
   ### ⚠️ Warning ⚠️
-  
+
   One or more parameters are wrong formatted:
 
   ${errors}

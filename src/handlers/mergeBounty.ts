@@ -1,8 +1,11 @@
 import chalk from "chalk";
-import { callEp } from "../helpers";
+import { callEp, txUrl } from "../helpers";
 import { PRHandler } from "../interfaces/core.interface";
 import appConfig from "../config/app-config";
-import { IBountyCreate } from "../interfaces/bounty.interface";
+import {
+  IBountyCreate,
+  IBountyPlusNetwork
+} from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
 import { AxiosError } from "axios";
 
@@ -15,8 +18,8 @@ export async function handlePRMerged({
 }: PRHandler) {
   try {
     const {
-      data: { bounty }
-    }: IBountyCreate = await callEp("bounty/merge", {
+      data: { bounty, network }
+    }: IBountyPlusNetwork = await callEp("bounty/merge", {
       prNumber: issueNumber,
       orgName,
       repoName,
@@ -24,10 +27,10 @@ export async function handlePRMerged({
     });
     console.debug(bounty);
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/claim`;
-
+    const txLink = txUrl(bounty.transactionHash, network.name);
     await github.replyToCommand(
       issueNumber,
-      Responses.MERGE_BOUNTY_SUCCESS(signUrl)
+      Responses.MERGE_BOUNTY_SUCCESS(signUrl, txLink)
     );
   } catch (e) {
     console.error(chalk.red(`Error handling merge event. ${e}`));

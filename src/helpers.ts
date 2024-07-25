@@ -4,6 +4,7 @@ import { GithubFacade } from "./adapters";
 import { ZodIssue } from "zod";
 import { StatusCodes } from "http-status-codes";
 import { Responses } from "./responses";
+import e from "express";
 
 const paramsValidationFail = async (
   github: GithubFacade,
@@ -66,10 +67,19 @@ const getGithubUserData = async (username: string, github: GithubFacade) => {
   return res.data;
 };
 
+const txUrl = (txHash: string, network: string) => {
+  if (network === "preprod") {
+    return `https://preprod.cexplorer.io/tx/${txHash}`;
+  } else {
+    return `https://cexplorer.io/tx/${txHash}`;
+  }
+};
+
 export {
   getRepoLink,
   paramsValidationFail,
   callEp,
+  txUrl,
   isBadRequest,
   isOtherClientError,
   getGithubUserData
