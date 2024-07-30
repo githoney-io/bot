@@ -34,8 +34,8 @@ export async function attachBounty(
     const creatorData = await getGithubUserData(creator, github);
 
     const {
-      data: { bounty }
-    }: IBountyCreate = await callEp("bounty", {
+      data: { bounty, fundingId }
+    } = await callEp("bounty", {
       title: issueInfo.title,
       description: issueInfo.description,
       amount: amountADA,
@@ -63,7 +63,7 @@ export async function attachBounty(
     });
     console.debug(bounty);
 
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create/`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create?fundingId=${fundingId}`;
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
