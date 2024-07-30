@@ -8,6 +8,7 @@ import {
 } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
 import { AxiosError } from "axios";
+import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/merge (POST)
 export async function handlePRMerged({
@@ -36,10 +37,17 @@ export async function handlePRMerged({
     console.error(chalk.red(`Error handling merge event. ${e}`));
 
     if (e instanceof AxiosError) {
-      await github.replyToCommand(
-        issueNumber,
-        Responses.BACKEND_ERROR(e.response?.data.error)
-      );
+      if (e.response?.data.botCode === BOT_CODES.CLOSE_ACTION_NOT_FOUND) {
+        await github.replyToCommand(
+          issueNumber,
+          Responses.CLOSE_ACTION_NOT_FOUND
+        );
+      } else {
+        await github.replyToCommand(
+          issueNumber,
+          Responses.BACKEND_ERROR(e.response?.data.error)
+        );
+      }
     } else {
       await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
     }

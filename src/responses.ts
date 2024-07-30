@@ -119,6 +119,13 @@ const WRONG_COMMAND_USE = `
   - \`accept-bounty\` command in PRs.
 `;
 
+const CLOSE_ACTION_NOT_FOUND = `
+  ### ⚠️ Warning ⚠️
+
+  **Bounty not found.**
+  If you are seeing this message and the PR has a bounty associated with it, please contact githoney@help.com
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -134,5 +141,6 @@ export const Responses = {
   MERGE_BOUNTY_SUCCESS,
   FUND_BOUNTY_SUCCESS,
   CREATE_BOUNTY_SUCCESS,
-  BACKEND_ERROR
+  BACKEND_ERROR,
+  CLOSE_ACTION_NOT_FOUND
 };
