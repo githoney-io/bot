@@ -3,6 +3,7 @@ import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import { acceptBounty, attachBounty, fundBounty } from "./handlers";
 import { Responses } from "./responses";
+import { VALID_COMMANDS } from "./utils/constants";
 
 export async function handleComment(
   github: GithubFacade,
@@ -32,10 +33,10 @@ export async function handleComment(
   }
 
   switch (parsed._[0]) {
-    case "help":
+    case VALID_COMMANDS.HELP:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
-    case "attach-bounty":
+    case VALID_COMMANDS.ATTACH:
       if ("pull_request" in issue)
         return await github.replyToCommand(
           issue.number,
@@ -66,7 +67,7 @@ export async function handleComment(
         github
       );
       break;
-    case "fund-bounty":
+    case VALID_COMMANDS.FUND:
       if ("pull_request" in issue)
         return await github.replyToCommand(
           issue.number,
@@ -87,7 +88,7 @@ export async function handleComment(
         github
       );
       break;
-    case "accept-bounty":
+    case VALID_COMMANDS.ACCEPT:
       if (!("pull_request" in issue))
         return await github.replyToCommand(
           issue.number,

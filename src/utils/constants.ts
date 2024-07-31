@@ -14,3 +14,10 @@ export const BOT_CODES = {
   BOUNTY_NOT_FOUND: "BountyNotFound",
   CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound"
 };
+
+export const VALID_COMMANDS = {
+  HELP: "help",
+  ATTACH: "attach-bounty",
+  FUND: "fund-bounty",
+  ACCEPT: "accept-bounty"
+};
