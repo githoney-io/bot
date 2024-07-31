@@ -3,6 +3,7 @@ import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import { acceptBounty, attachBounty, fundBounty } from "./handlers";
 import { Responses } from "./responses";
+import { collectWrongCommand } from "./handlers/wrongCommand";
 import { VALID_COMMANDS } from "./utils/constants";
 
 export async function handleComment(
@@ -29,6 +30,7 @@ export async function handleComment(
     console.warn("bad command syntax", parsed);
     await github.rejectCommand(comment.id);
     await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
+    await collectWrongCommand(parsed);
     return;
   }
 
@@ -110,6 +112,7 @@ export async function handleComment(
       console.warn("unknown command", parsed);
       await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
       await github.rejectCommand(comment.id);
+      await collectWrongCommand(parsed);
       break;
   }
 }
