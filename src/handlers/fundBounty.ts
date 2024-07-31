@@ -24,7 +24,7 @@ export async function fundBounty(
 
     const data = await getGithubUserData(username, github);
 
-    const tokens = fundInfo.tokens.map(async (t) => {
+    const tokens = fundInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
       return name.toLowerCase() === "ada"
         ? { name, amount: Number(amount) }
@@ -38,7 +38,7 @@ export async function fundBounty(
     }
 
     const {
-      data: { bounty, walletId }
+      data: { bounty, fundingId }
     } = await callEp("bounty/sponsor", {
       address: fundInfo.address,
       tokens,
@@ -60,7 +60,7 @@ export async function fundBounty(
       repoName: fundInfo.repository
     });
 
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?walletId=${walletId}`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${fundingId}`;
     await github.replyToCommand(
       fundInfo.issue,
       Responses.FUND_BOUNTY_SUCCESS(signUrl)
