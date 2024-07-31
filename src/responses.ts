@@ -7,9 +7,9 @@ interface ICreateBountySuccess {
   isDev?: boolean;
 }
 const CREATE_BOUNTY_SUCCESS = (params: ICreateBountySuccess) => `
-  ### New bounty  created for this issue! 🎊
+  ### New bounty created for this issue! 🎊
 
-  ${params.isDev ? "#### Dev modev" : ""}
+  ${params.isDev ? "#### Dev mode" : ""}
 
   > 🍯 Reward: **${params.amount} ADA**
   > ⏰ Work deadline: **${new Date(params.deadline).toUTCString()}**
