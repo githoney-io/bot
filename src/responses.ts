@@ -126,6 +126,12 @@ const CLOSE_ACTION_NOT_FOUND = `
   If you are seeing this message and the PR has a bounty associated with it, please contact githoney@help.com
 `;
 
+const BOUNTY_HASH_NOT_FOUND = `
+  ### ⚠️ Warning ⚠️
+
+  This Bounty creation transaction is not submited yet.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -133,6 +139,7 @@ export const Responses = {
   BOUNTY_NOT_FOUND,
   WRONG_COMMAND_USE,
   ALREADY_ASSIGNED_BOUNTY,
+  BOUNTY_HASH_NOT_FOUND,
   HELP_COMMAND,
   INTERNAL_SERVER_ERROR,
   PLEASE_USE_ADA,

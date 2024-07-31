@@ -1,13 +1,8 @@
 import chalk from "chalk";
-import { callEp, txUrl } from "../helpers";
+import { callEp, commandErrorHandler, txUrl } from "../helpers";
 import { PRHandler } from "../interfaces/core.interface";
-import {
-  IBountyCreate,
-  IBountyPlusNetwork
-} from "../interfaces/bounty.interface";
+import { IBountyPlusNetwork } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
-import { AxiosError } from "axios";
-import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/cancel (POST)
 export async function handlePRClosed({
@@ -34,20 +29,6 @@ export async function handlePRClosed({
   } catch (e) {
     console.error(chalk.red(`Error handling cancel event: ${e}`));
 
-    if (e instanceof AxiosError) {
-      if (e.response?.data.botCode === BOT_CODES.CLOSE_ACTION_NOT_FOUND) {
-        await github.replyToCommand(
-          issueNumber,
-          Responses.CLOSE_ACTION_NOT_FOUND
-        );
-      } else {
-        await github.replyToCommand(
-          issueNumber,
-          Responses.BACKEND_ERROR(e.response?.data.error)
-        );
-      }
-    } else {
-      await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
-    }
+    await commandErrorHandler(e, issueNumber, github);
   }
 }

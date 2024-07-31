@@ -74,6 +74,44 @@ const txUrl = (txHash: string, network: string) => {
     return `https://cexplorer.io/tx/${txHash}`;
   }
 };
+const BOT_ERROR_RESPONSES: { [key: string]: string } = {
+  BountyAlreadyExist: Responses.ALREADY_EXISTING_BOUNTY,
+  BountyTaken: Responses.ALREADY_ASSIGNED_BOUNTY,
+  BountyNotFound: Responses.BOUNTY_NOT_FOUND,
+  CloseActionNotFound: Responses.CLOSE_ACTION_NOT_FOUND,
+  BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND
+};
+
+export const commandErrorHandler = async (
+  e: any,
+  issueNumber: number,
+  github: GithubFacade,
+  commentId?: number
+) => {
+  if (e instanceof AxiosError) {
+    if (isBadRequest(e) && commentId) {
+      // If the error is a 400, it means that the validation failed
+      await paramsValidationFail(
+        github,
+        issueNumber,
+        commentId,
+        e.response?.data.error
+      );
+    } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
+      await github.replyToCommand(
+        issueNumber,
+        BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
+      );
+    } else if (isOtherClientError(e)) {
+      await github.replyToCommand(
+        issueNumber,
+        Responses.BACKEND_ERROR(e.response?.data.error)
+      );
+    }
+  } else {
+    await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
+  }
+};
 
 export {
   getRepoLink,
