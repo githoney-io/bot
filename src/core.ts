@@ -34,6 +34,11 @@ export async function handleComment(
     return;
   }
 
+  if (Object.keys(parsed).length === 1) {
+    console.warn("no args");
+    await collectWrongCommand(parsed);
+  }
+
   switch (parsed._[0]) {
     case VALID_COMMANDS.HELP:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
