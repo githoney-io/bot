@@ -81,6 +81,11 @@ export async function fundBounty(
           params.fundInfo.issue,
           Responses.BOUNTY_NOT_FOUND
         );
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_EXPIRED) {
+        await github.replyToCommand(
+          params.fundInfo.issue,
+          Responses.BOUNTY_EXPIRED
+        );
       } else if (isOtherClientError(e)) {
         await github.replyToCommand(
           params.fundInfo.issue,

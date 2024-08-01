@@ -28,6 +28,12 @@ const ALREADY_EXISTING_BOUNTY = `
   This issue already has a bounty attached.
 `;
 
+const BOUNTY_EXPIRED = `
+  ### ⚠️ Warning ⚠️
+
+  ⏳ Sorry, this bounty has expired. ⏳
+`;
+
 const FUND_BOUNTY_SUCCESS = (signUrl: string) => `
   ### 🎉 The bounty has been funded! 🎉
 
@@ -188,5 +194,6 @@ export const Responses = {
   FUND_BOUNTY_SUCCESS,
   CREATE_BOUNTY_SUCCESS,
   BACKEND_ERROR,
-  CLOSE_ACTION_NOT_FOUND
+  CLOSE_ACTION_NOT_FOUND,
+  BOUNTY_EXPIRED
 };

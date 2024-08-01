@@ -75,8 +75,16 @@ export async function acceptBounty(
           params.issueNumber,
           Responses.BOUNTY_NOT_FOUND
         );
+      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_EXPIRED) {
+        await github.replyToCommand(
+          params.issueNumber,
+          Responses.BOUNTY_EXPIRED
+        );
       } else if (isOtherClientError(e)) {
-        await github.replyToCommand(params.issueNumber, e.response?.data.error);
+        await github.replyToCommand(
+          params.issueNumber,
+          Responses.BACKEND_ERROR(e.response?.data.error)
+        );
       }
     } else {
       await github.replyToCommand(
