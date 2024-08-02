@@ -70,7 +70,7 @@ export async function attachBounty(
         address,
         amount,
         bountyId: bounty.id,
-        deadline,
+        deadline: Date.now() + deadline_ut,
         signUrl,
         isDev: network === "preprod"
       })
