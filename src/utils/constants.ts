@@ -15,8 +15,8 @@ export const BOT_CODES = {
   CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound"
 };
 
+export const HELP_COMMAND = "help";
 export const VALID_COMMANDS = {
-  HELP: "help",
   ATTACH: "attach-bounty",
   FUND: "fund-bounty",
   ACCEPT: "accept-bounty"

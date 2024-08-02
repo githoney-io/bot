@@ -4,7 +4,7 @@ import minimist from "minimist";
 import { acceptBounty, attachBounty, fundBounty } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
-import { VALID_COMMANDS } from "./utils/constants";
+import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
 
 export async function handleComment(
   github: GithubFacade,
@@ -34,13 +34,16 @@ export async function handleComment(
     return;
   }
 
-  if (Object.keys(parsed).length === 1) {
+  if (
+    Object.keys(parsed).length === 1 &&
+    Object.values(VALID_COMMANDS).includes(parsed._[0])
+  ) {
     console.warn("no args");
     await collectWrongCommand(parsed);
   }
 
   switch (parsed._[0]) {
-    case VALID_COMMANDS.HELP:
+    case HELP_COMMAND:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
     case VALID_COMMANDS.ATTACH:

@@ -7,7 +7,7 @@ export async function collectWrongCommand(parsed: minimist.ParsedArgs) {
     const command = parsed._[0];
 
     await callEp("metrics/wrong-cmd", {
-      command,
+      command: command || "",
       args: parsed
     });
   } catch (err) {
