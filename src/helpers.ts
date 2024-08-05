@@ -79,7 +79,8 @@ const BOT_ERROR_RESPONSES: { [key: string]: string } = {
   BountyTaken: Responses.ALREADY_ASSIGNED_BOUNTY,
   BountyNotFound: Responses.BOUNTY_NOT_FOUND,
   CloseActionNotFound: Responses.CLOSE_ACTION_NOT_FOUND,
-  BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND
+  BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND,
+  CloseWrongFrom: Responses.CLOSE_WRONG_FROM
 };
 
 export const commandErrorHandler = async (

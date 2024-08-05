@@ -36,7 +36,7 @@ export async function handleComment(
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
     case "attach-bounty":
-      if ("pull_request" in issue)
+      if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
@@ -67,7 +67,7 @@ export async function handleComment(
       );
       break;
     case "fund-bounty":
-      if ("pull_request" in issue)
+      if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
@@ -88,7 +88,7 @@ export async function handleComment(
       );
       break;
     case "accept-bounty":
-      if (!("pull_request" in issue))
+      if (!("pull_request" in issue) || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE

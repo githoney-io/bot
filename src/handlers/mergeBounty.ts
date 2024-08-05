@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { callEp, commandErrorHandler, txUrl } from "../helpers";
-import { PRHandler } from "../interfaces/core.interface";
+import { CloseHandler } from "../interfaces/core.interface";
 import appConfig from "../config/app-config";
 import { IBountyPlusNetwork } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
@@ -11,7 +11,7 @@ export async function handlePRMerged({
   issueNumber,
   orgName,
   repoName
-}: PRHandler) {
+}: CloseHandler) {
   try {
     const {
       data: { bounty, network }
