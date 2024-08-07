@@ -1,17 +1,10 @@
 import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
-import {
-  callEp,
-  getGithubUserData,
-  isBadRequest,
-  isOtherClientError,
-  paramsValidationFail
-} from "../helpers";
+import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
 import { FundBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
-import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/sponsor (POST)
 export async function fundBounty(
@@ -68,35 +61,11 @@ export async function fundBounty(
   } catch (e) {
     console.error(chalk.red(`Error funding bounty. ${e}`));
 
-    if (e instanceof AxiosError) {
-      if (isBadRequest(e)) {
-        await paramsValidationFail(
-          github,
-          params.fundInfo.issue,
-          params.fundCommentId,
-          e.response?.data.error
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_NOT_FOUND) {
-        await github.replyToCommand(
-          params.fundInfo.issue,
-          Responses.BOUNTY_NOT_FOUND
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_EXPIRED) {
-        await github.replyToCommand(
-          params.fundInfo.issue,
-          Responses.BOUNTY_EXPIRED
-        );
-      } else if (isOtherClientError(e)) {
-        await github.replyToCommand(
-          params.fundInfo.issue,
-          Responses.BACKEND_ERROR(e.response?.data.error)
-        );
-      }
-    } else {
-      await github.replyToCommand(
-        params.fundInfo.issue,
-        Responses.INTERNAL_SERVER_ERROR
-      );
-    }
+    await commandErrorHandler(
+      e,
+      params.fundInfo.issue,
+      github,
+      params.fundCommentId
+    );
   }
 }

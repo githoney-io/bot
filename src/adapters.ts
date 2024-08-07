@@ -4,7 +4,7 @@ import EventSource from "eventsource";
 import { App } from "octokit";
 import { handleComment } from "./core";
 import { callEp } from "./helpers";
-import { handlePRMerged, handlePRClosed } from "./handlers";
+import { handlePRMerged, handleBountyClosed } from "./handlers";
 
 export class GithubFacade {
   octokit: Octokit;
@@ -148,6 +148,32 @@ export function startBot(params: BotParams) {
     await handleComment(facade, payload.issue, payload.comment);
   });
 
+  app.webhooks.on("issues.closed", async ({ payload }) => {
+    if (!payload.installation) {
+      throw Error("no installation defined");
+    }
+
+    console.log(`Issue closed for installation ${payload.installation.id}`);
+    let installation = await app.getInstallationOctokit(
+      payload.installation.id
+    );
+
+    let facade = new GithubFacade(
+      installation,
+      payload.repository.owner.login,
+      payload.repository.name
+    );
+
+    const issueHandleObject = {
+      from: "issue",
+      facade,
+      issueNumber: payload.issue.number,
+      repoName: payload.repository.name,
+      orgName: payload.repository.owner.login
+    };
+    await handleBountyClosed(issueHandleObject);
+  });
+
   app.webhooks.on("pull_request.closed", async ({ payload }) => {
     if (!payload.installation) {
       throw Error("no installation defined");
@@ -165,6 +191,7 @@ export function startBot(params: BotParams) {
     );
 
     const prHandleObject = {
+      from: "pr",
       facade,
       issueNumber: payload.pull_request.number,
       repoName: payload.repository.name,
@@ -174,7 +201,7 @@ export function startBot(params: BotParams) {
     if (payload.pull_request.merged) {
       await handlePRMerged(prHandleObject);
     } else {
-      await handlePRClosed(prHandleObject);
+      await handleBountyClosed(prHandleObject);
     }
   });
 

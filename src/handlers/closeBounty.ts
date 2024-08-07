@@ -1,25 +1,22 @@
 import chalk from "chalk";
-import { callEp, txUrl } from "../helpers";
-import { PRHandler } from "../interfaces/core.interface";
-import {
-  IBountyCreate,
-  IBountyPlusNetwork
-} from "../interfaces/bounty.interface";
+import { callEp, commandErrorHandler, txUrl } from "../helpers";
+import { CloseHandler } from "../interfaces/core.interface";
+import { IBountyPlusNetwork } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
-import { AxiosError } from "axios";
-import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/cancel (POST)
-export async function handlePRClosed({
+export async function handleBountyClosed({
+  from,
   facade: github,
   issueNumber,
   orgName,
   repoName
-}: PRHandler) {
+}: CloseHandler) {
   try {
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/cancel", {
+      from,
       prNumber: issueNumber,
       orgName,
       repoName,
@@ -29,25 +26,11 @@ export async function handlePRClosed({
     const txLink = txUrl(bounty.transactionHash, network.name);
     await github.replyToCommand(
       issueNumber,
-      Responses.CLOSE_BOUNTY_SUCCESS(txLink)
+      Responses.CLOSE_BOUNTY_SUCCESS(txLink, bounty.prNumber ? true : false)
     );
   } catch (e) {
     console.error(chalk.red(`Error handling cancel event: ${e}`));
 
-    if (e instanceof AxiosError) {
-      if (e.response?.data.botCode === BOT_CODES.CLOSE_ACTION_NOT_FOUND) {
-        await github.replyToCommand(
-          issueNumber,
-          Responses.CLOSE_ACTION_NOT_FOUND
-        );
-      } else {
-        await github.replyToCommand(
-          issueNumber,
-          Responses.BACKEND_ERROR(e.response?.data.error)
-        );
-      }
-    } else {
-      await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
-    }
+    await commandErrorHandler(e, issueNumber, github);
   }
 }

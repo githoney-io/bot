@@ -54,7 +54,8 @@ interface ReclaimBountyParams {
   address: string;
 }
 
-interface PRHandler {
+interface CloseHandler {
+  from: string;
   facade: GithubFacade;
   issueNumber: number;
   repoName: string;
@@ -67,5 +68,5 @@ export {
   AcceptBountyParams,
   ReclaimBountyParams,
   BountyInfo,
-  PRHandler
+  CloseHandler
 };

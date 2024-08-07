@@ -56,11 +56,21 @@ const MERGE_BOUNTY_SUCCESS = (reclaimUrl: string, mergeTxUrl: string) => `
   Claim your reward [here](${reclaimUrl}).
 `;
 
-const CLOSE_BOUNTY_SUCCESS = (closeTxUrl: string) => `
+const CLOSE_BOUNTY_SUCCESS = (closeTxUrl: string, isPR: boolean) => {
+  if (isPR) {
+    return `
   Sorry, your PR was not accepted. 😢
 
   See the transaction [here](${closeTxUrl}).
 `;
+  } else {
+    return `
+  ### 🎉 The bounty has been closed! 🎉
+
+  You can see the transaction [here](${closeTxUrl}).
+`;
+  }
+};
 
 const PARAMETERS_WRONG = (errors: string) => `
   ### ⚠️ Warning ⚠️
@@ -166,9 +176,9 @@ const WRONG_COMMAND_USE = `
   ### Sorry, you can't use this command here. 😔
 
   Remember, you can only use the:
-  - \`attach-bounty\` command in issues.
-  - \`fund-bounty\` command in issues.
-  - \`accept-bounty\` command in PRs.
+  - \`attach-bounty\` command in open issues.
+  - \`fund-bounty\` command in open issues.
+  - \`accept-bounty\` command in open PRs.
 `;
 
 const CLOSE_ACTION_NOT_FOUND = `
@@ -178,6 +188,19 @@ const CLOSE_ACTION_NOT_FOUND = `
   If you are seeing this message and the PR has a bounty associated with it, please contact githoney@help.com
 `;
 
+const CLOSE_WRONG_FROM = `
+  ### ⚠️ Warning ⚠️
+
+  **Bounty already assigned.**
+  The bounty for this issue has been assigned to someone, it can only be closed in the PR.
+`;
+
+const BOUNTY_HASH_NOT_FOUND = `
+  ### ⚠️ Warning ⚠️
+
+  This Bounty creation transaction is not submited yet.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -185,6 +208,7 @@ export const Responses = {
   BOUNTY_NOT_FOUND,
   WRONG_COMMAND_USE,
   ALREADY_ASSIGNED_BOUNTY,
+  BOUNTY_HASH_NOT_FOUND,
   HELP_COMMAND,
   INTERNAL_SERVER_ERROR,
   PLEASE_USE_ADA,
@@ -195,5 +219,6 @@ export const Responses = {
   CREATE_BOUNTY_SUCCESS,
   BACKEND_ERROR,
   CLOSE_ACTION_NOT_FOUND,
-  BOUNTY_EXPIRED
+  BOUNTY_EXPIRED,
+  CLOSE_WRONG_FROM
 };

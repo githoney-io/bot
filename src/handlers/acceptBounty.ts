@@ -1,18 +1,10 @@
-import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
-import {
-  callEp,
-  getGithubUserData,
-  isBadRequest,
-  isOtherClientError,
-  paramsValidationFail
-} from "../helpers";
+import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AcceptBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
-import { BOT_CODES } from "../utils/constants";
 
 // Calls to {BACKEND_URL}/bounty/assign (POST)
 export async function acceptBounty(
@@ -57,40 +49,6 @@ export async function acceptBounty(
   } catch (e) {
     console.error(chalk.red(`Error assigning developer. ${e}`));
 
-    if (e instanceof AxiosError) {
-      if (isBadRequest(e)) {
-        await paramsValidationFail(
-          github,
-          params.issueNumber,
-          params.commentId,
-          e.response?.data.error
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_TAKEN) {
-        await github.replyToCommand(
-          params.issueNumber,
-          Responses.ALREADY_ASSIGNED_BOUNTY
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_NOT_FOUND) {
-        await github.replyToCommand(
-          params.issueNumber,
-          Responses.BOUNTY_NOT_FOUND
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_EXPIRED) {
-        await github.replyToCommand(
-          params.issueNumber,
-          Responses.BOUNTY_EXPIRED
-        );
-      } else if (isOtherClientError(e)) {
-        await github.replyToCommand(
-          params.issueNumber,
-          Responses.BACKEND_ERROR(e.response?.data.error)
-        );
-      }
-    } else {
-      await github.replyToCommand(
-        params.issueNumber,
-        Responses.INTERNAL_SERVER_ERROR
-      );
-    }
+    await commandErrorHandler(e, params.issueNumber, github, params.commentId);
   }
 }
