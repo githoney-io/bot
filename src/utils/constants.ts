@@ -15,3 +15,10 @@ export const BOT_CODES = {
   CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound",
   BOUNTY_EXPIRED: "BountyExpired"
 };
+
+export const HELP_COMMAND = "help";
+export const VALID_COMMANDS = {
+  ATTACH: "attach-bounty",
+  FUND: "fund-bounty",
+  ACCEPT: "accept-bounty"
+};

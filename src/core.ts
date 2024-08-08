@@ -3,6 +3,8 @@ import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import { acceptBounty, attachBounty, fundBounty } from "./handlers";
 import { Responses } from "./responses";
+import { collectWrongCommand } from "./handlers/wrongCommand";
+import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
 
 export async function handleComment(
   github: GithubFacade,
@@ -28,14 +30,23 @@ export async function handleComment(
     console.warn("bad command syntax", parsed);
     await github.rejectCommand(comment.id);
     await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
+    await collectWrongCommand(parsed);
     return;
   }
 
+  if (
+    Object.keys(parsed).length === 1 &&
+    Object.values(VALID_COMMANDS).includes(parsed._[0])
+  ) {
+    console.warn("no args");
+    await collectWrongCommand(parsed);
+  }
+
   switch (parsed._[0]) {
-    case "help":
+    case HELP_COMMAND:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
-    case "attach-bounty":
+    case VALID_COMMANDS.ATTACH:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
@@ -66,7 +77,7 @@ export async function handleComment(
         github
       );
       break;
-    case "fund-bounty":
+    case VALID_COMMANDS.FUND:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
@@ -87,7 +98,7 @@ export async function handleComment(
         github
       );
       break;
-    case "accept-bounty":
+    case VALID_COMMANDS.ACCEPT:
       if (!("pull_request" in issue) || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
@@ -109,6 +120,7 @@ export async function handleComment(
       console.warn("unknown command", parsed);
       await github.replyToCommand(issue.number, Responses.UNKNOWN_COMMAND);
       await github.rejectCommand(comment.id);
+      await collectWrongCommand(parsed);
       break;
   }
 }
