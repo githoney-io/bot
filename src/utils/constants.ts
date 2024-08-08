@@ -12,7 +12,8 @@ export const BOT_CODES = {
   BOUNTY_ALREADY_EXIST: "BountyAlreadyExist",
   BOUNTY_TAKEN: "BountyTaken",
   BOUNTY_NOT_FOUND: "BountyNotFound",
-  CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound"
+  CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound",
+  BOUNTY_EXPIRED: "BountyExpired"
 };
 
 export const HELP_COMMAND = "help";

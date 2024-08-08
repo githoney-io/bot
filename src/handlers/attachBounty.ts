@@ -1,16 +1,7 @@
-import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
-import {
-  callEp,
-  getGithubUserData,
-  isBadRequest,
-  isOtherClientError,
-  paramsValidationFail
-} from "../helpers";
-import { IBountyCreate } from "../interfaces/bounty.interface";
+import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
 import { AttachBountyParams } from "../interfaces/core.interface";
-import { BOT_CODES, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
-import { StatusCodes } from "http-status-codes";
+import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
@@ -70,7 +61,7 @@ export async function attachBounty(
         address,
         amount,
         bountyId: bounty.id,
-        deadline,
+        deadline: Date.now() + deadline_ut,
         signUrl,
         isDev: network === "preprod"
       })
@@ -86,31 +77,11 @@ export async function attachBounty(
   } catch (e) {
     console.error(chalk.red(`Error creating bounty. ${e}`));
 
-    if (e instanceof AxiosError) {
-      if (isBadRequest(e)) {
-        // If the error is a 400, it means that the validation failed
-        await paramsValidationFail(
-          github,
-          params.issueInfo.number,
-          params.commentId,
-          e.response?.data.error
-        );
-      } else if (e.response?.data.botCode === BOT_CODES.BOUNTY_ALREADY_EXIST) {
-        await github.replyToCommand(
-          params.issueInfo.number,
-          Responses.ALREADY_EXISTING_BOUNTY
-        );
-      } else if (isOtherClientError(e)) {
-        await github.replyToCommand(
-          params.issueInfo.number,
-          Responses.BACKEND_ERROR(e.response?.data.error)
-        );
-      }
-    } else {
-      await github.replyToCommand(
-        params.issueInfo.number,
-        Responses.INTERNAL_SERVER_ERROR
-      );
-    }
+    await commandErrorHandler(
+      e,
+      params.issueInfo.number,
+      github,
+      params.commentId
+    );
   }
 }

@@ -47,7 +47,7 @@ export async function handleComment(
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
     case VALID_COMMANDS.ATTACH:
-      if ("pull_request" in issue)
+      if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
@@ -78,7 +78,7 @@ export async function handleComment(
       );
       break;
     case VALID_COMMANDS.FUND:
-      if ("pull_request" in issue)
+      if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
@@ -99,7 +99,7 @@ export async function handleComment(
       );
       break;
     case VALID_COMMANDS.ACCEPT:
-      if (!("pull_request" in issue))
+      if (!("pull_request" in issue) || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE

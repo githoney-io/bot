@@ -17,6 +17,7 @@ interface INetwork {
 interface IBounty {
   id: number;
   title: string;
+  prNumber: number | null;
   description: string | null;
   amount: number;
   issueLink: string;
