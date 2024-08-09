@@ -10,7 +10,7 @@ const closeIssuesSchema = z.object({
     z.object({
       owner: z.string().min(1),
       repo: z.string().min(1),
-      issue_number: z.number().positive()
+      issue_number: z.array(z.number().positive().nullable())
     })
   )
 });
@@ -42,9 +42,17 @@ export const closeIssues = async (req: Request, res: Response) => {
           await octokitInstallation.rest.issues.update({
             owner,
             repo,
-            issue_number,
+            issue_number: issue_number[0]!,
             state: "closed"
           });
+
+          if (issue_number[1])
+            await octokitInstallation.rest.issues.update({
+              owner,
+              repo,
+              issue_number: issue_number[1],
+              state: "closed"
+            });
         });
       }
     });

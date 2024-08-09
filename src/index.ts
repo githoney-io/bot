@@ -3,6 +3,8 @@ import { startBot } from "./adapters";
 import appConfig from "./config/app-config";
 import fs from "fs";
 import figlet from "figlet";
+import { closeIssues } from "./endpoint/closeIssues";
+import { apiKeyMiddleware } from "./middlewares/apiKey.middleware";
 
 const PORT = appConfig.PORT;
 
@@ -15,6 +17,12 @@ let webhooks = startBot({
 
 const startServer = async () => {
   const app = createServer();
+
+  app.post(
+    "/closeIssues",
+    async (req, res, next) => apiKeyMiddleware(req, res, next),
+    async (req, res) => closeIssues(req, res)
+  );
 
   app.post("/webhooks", async (_req, _res) => {
     try {
