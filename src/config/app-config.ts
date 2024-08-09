@@ -16,6 +16,7 @@ export interface AppConfig {
   FRONTEND_URL: string;
   BACKEND_API_KEY: string;
   SOURCE: string;
+  API_KEY: string;
 }
 
 const envSchema = z.object({
@@ -29,7 +30,8 @@ const envSchema = z.object({
   BACKEND_URL: z.string().url(),
   FRONTEND_URL: z.string().url(),
   BACKEND_API_KEY: z.string().min(1),
-  SOURCE: z.string().min(1)
+  SOURCE: z.string().min(1),
+  API_KEY: z.string().min(1)
 });
 
 const nonValidatedAppConfig: AppConfig = {
@@ -44,7 +46,8 @@ const nonValidatedAppConfig: AppConfig = {
   BACKEND_URL: process.env.BACKEND_URL as string,
   FRONTEND_URL: process.env.FRONTEND_URL as string,
   BACKEND_API_KEY: process.env.BACKEND_API_KEY as string,
-  SOURCE: process.env.SOURCE as string
+  SOURCE: process.env.SOURCE as string,
+  API_KEY: process.env.API_KEY as string
 };
 
 export const appConfig = envSchema.parse(nonValidatedAppConfig);
