@@ -201,6 +201,12 @@ const BOUNTY_HASH_NOT_FOUND = `
   This Bounty creation transaction is not submited yet.
 `;
 
+const DEADLINE_REACHED = `
+  ### 🔔 Deadline reached 🔔
+
+  Unfortunately, the time allocated to complete this bounty has expired. As a result, the bounty is no longer valid, and the issue will be closed.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -220,5 +226,6 @@ export const Responses = {
   BACKEND_ERROR,
   CLOSE_ACTION_NOT_FOUND,
   BOUNTY_EXPIRED,
-  CLOSE_WRONG_FROM
+  CLOSE_WRONG_FROM,
+  DEADLINE_REACHED
 };

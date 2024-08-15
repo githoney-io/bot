@@ -1,9 +1,10 @@
 import { Response, Request } from "express";
-import { App } from "octokit";
+import { App, Octokit } from "octokit";
 import appConfig from "../config/app-config";
 import fs from "fs";
 import { z } from "zod";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { Responses } from "../responses";
 
 const closeIssuesSchema = z.object({
   issuesToClose: z.array(
@@ -14,6 +15,28 @@ const closeIssuesSchema = z.object({
     })
   )
 });
+
+const closeAndComment = async (
+  installation: Octokit,
+  {
+    owner,
+    repo,
+    issue_number
+  }: { owner: string; repo: string; issue_number: number }
+) => {
+  await installation.rest.issues.update({
+    owner,
+    repo,
+    issue_number,
+    state: "closed"
+  });
+  await installation.rest.issues.createComment({
+    owner,
+    repo,
+    issue_number,
+    body: Responses.DEADLINE_REACHED
+  });
+};
 
 export const closeIssues = async (req: Request, res: Response) => {
   try {
@@ -39,19 +62,19 @@ export const closeIssues = async (req: Request, res: Response) => {
         );
 
         issues.forEach(async ({ owner, repo, issue_number }) => {
-          await octokitInstallation.rest.issues.update({
+          // Close issues
+          await closeAndComment(octokitInstallation, {
             owner,
             repo,
-            issue_number: issue_number[0]!,
-            state: "closed"
+            issue_number: issue_number[0]!
           });
 
+          // Close PRs if there are any
           if (issue_number[1])
-            await octokitInstallation.rest.issues.update({
+            await closeAndComment(octokitInstallation, {
               owner,
               repo,
-              issue_number: issue_number[1],
-              state: "closed"
+              issue_number: issue_number[1]
             });
         });
       }

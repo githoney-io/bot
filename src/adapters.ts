@@ -134,6 +134,10 @@ export function startBot(params: BotParams) {
       throw Error("no installation defined");
     }
 
+    if (payload.sender.type !== "User") {
+      return;
+    }
+
     console.log(`Comment for installation ${payload.installation.id}`);
     let installation = await app.getInstallationOctokit(
       payload.installation.id
@@ -177,6 +181,10 @@ export function startBot(params: BotParams) {
   app.webhooks.on("pull_request.closed", async ({ payload }) => {
     if (!payload.installation) {
       throw Error("no installation defined");
+    }
+
+    if (payload.sender.type !== "User") {
+      return;
     }
 
     console.log(`PR closed for installation ${payload.installation.id}`);
