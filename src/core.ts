@@ -9,13 +9,22 @@ import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
 export async function handleComment(
   github: GithubFacade,
   issue: Issue,
-  comment: IssueComment
+  comment: IssueComment,
+  owner: string
 ) {
   const commentBody = comment.body.trim();
 
   if (!commentBody.startsWith("/githoney")) {
     console.debug("Skipping because not directed to bot");
     return;
+  }
+
+  if (owner !== "Organization") {
+    console.debug("Not an organization, ignoring.");
+    return await github.replyToCommand(
+      issue.number,
+      Responses.USER_INSTALLATION_COMMENT
+    );
   }
 
   let args = commentBody

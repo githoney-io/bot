@@ -60,6 +60,7 @@ interface CloseHandler {
   issueNumber: number;
   repoName: string;
   orgName: string;
+  owner: string;
 }
 
 export {

@@ -10,9 +10,18 @@ export async function handleBountyClosed({
   facade: github,
   issueNumber,
   orgName,
-  repoName
+  repoName,
+  owner
 }: CloseHandler) {
   try {
+    if (owner !== "Organization") {
+      console.debug("Not an organization, ignoring.");
+      return await github.replyToCommand(
+        issueNumber,
+        Responses.USER_INSTALLATION_COMMENT
+      );
+    }
+
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/cancel", {

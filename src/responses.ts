@@ -207,6 +207,15 @@ const DEADLINE_REACHED = `
   Unfortunately, the time allocated to complete this bounty has expired. As a result, the bounty is no longer valid, and the issue will be closed.
 `;
 
+const USER_INSTALLATION_COMMENT = `
+  ### ⚠️ Warning ⚠️
+
+  It seems you have installed the Githoney bot on a personal account.
+  Please install it on an organization account to use it.
+
+  🔎 See the [installation guide](https://docs.githoney.io/github_setup) for more information. 🔍
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -227,5 +236,6 @@ export const Responses = {
   CLOSE_ACTION_NOT_FOUND,
   BOUNTY_EXPIRED,
   CLOSE_WRONG_FROM,
-  DEADLINE_REACHED
+  DEADLINE_REACHED,
+  USER_INSTALLATION_COMMENT
 };
