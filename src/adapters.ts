@@ -149,7 +149,12 @@ export function startBot(params: BotParams) {
       payload.repository.name
     );
 
-    await handleComment(facade, payload.issue, payload.comment);
+    await handleComment(
+      facade,
+      payload.issue,
+      payload.comment,
+      payload.repository.owner.type
+    );
   });
 
   app.webhooks.on("issues.closed", async ({ payload }) => {
@@ -173,8 +178,10 @@ export function startBot(params: BotParams) {
       facade,
       issueNumber: payload.issue.number,
       repoName: payload.repository.name,
-      orgName: payload.repository.owner.login
+      orgName: payload.repository.owner.login,
+      owner: payload.repository.owner.type
     };
+
     await handleBountyClosed(issueHandleObject);
   });
 
@@ -203,7 +210,8 @@ export function startBot(params: BotParams) {
       facade,
       issueNumber: payload.pull_request.number,
       repoName: payload.repository.name,
-      orgName: payload.repository.owner.login
+      orgName: payload.repository.owner.login,
+      owner: payload.repository.owner.type
     };
 
     if (payload.pull_request.merged) {
