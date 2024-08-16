@@ -78,6 +78,12 @@ export function startBot(params: BotParams) {
           payload.installation.id
         );
 
+        if (payload.installation.account.type !== "Organization") {
+          return await callEp("metrics/userInstallation", {
+            user: payload.installation.account.login
+          });
+        }
+
         const { data } = await installation.rest.orgs.get({
           org: payload.installation.account.login
         });
