@@ -181,13 +181,6 @@ const WRONG_COMMAND_USE = `
   - \`accept-bounty\` command in open PRs.
 `;
 
-const CLOSE_ACTION_NOT_FOUND = `
-  ### ⚠️ Warning ⚠️
-
-  **Bounty not found.**
-  If you are seeing this message and the PR has a bounty associated with it, please contact githoney@help.com
-`;
-
 const CLOSE_WRONG_FROM = `
   ### ⚠️ Warning ⚠️
 
@@ -233,7 +226,6 @@ export const Responses = {
   FUND_BOUNTY_SUCCESS,
   CREATE_BOUNTY_SUCCESS,
   BACKEND_ERROR,
-  CLOSE_ACTION_NOT_FOUND,
   BOUNTY_EXPIRED,
   CLOSE_WRONG_FROM,
   DEADLINE_REACHED,

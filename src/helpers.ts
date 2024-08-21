@@ -78,7 +78,6 @@ const BOT_ERROR_RESPONSES: { [key: string]: string } = {
   BountyAlreadyExist: Responses.ALREADY_EXISTING_BOUNTY,
   BountyTaken: Responses.ALREADY_ASSIGNED_BOUNTY,
   BountyNotFound: Responses.BOUNTY_NOT_FOUND,
-  CloseActionNotFound: Responses.CLOSE_ACTION_NOT_FOUND,
   BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND,
   CloseWrongFrom: Responses.CLOSE_WRONG_FROM
 };
