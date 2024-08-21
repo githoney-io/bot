@@ -97,6 +97,8 @@ export const commandErrorHandler = async (
         commentId,
         e.response?.data.error
       );
+    } else if (e.response?.data.botCode === "CloseActionNotFound") {
+      return;
     } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
       await github.replyToCommand(
         issueNumber,
