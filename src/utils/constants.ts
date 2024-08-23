@@ -13,7 +13,8 @@ export const BOT_CODES = {
   BOUNTY_TAKEN: "BountyTaken",
   BOUNTY_NOT_FOUND: "BountyNotFound",
   CLOSE_ACTION_NOT_FOUND: "CloseActionNotFound",
-  BOUNTY_EXPIRED: "BountyExpired"
+  BOUNTY_EXPIRED: "BountyExpired",
+  NOT_OPEN_FOR_FUNDING: "NotOpenForFunding"
 };
 
 export const HELP_COMMAND = "help";

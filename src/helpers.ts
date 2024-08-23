@@ -4,7 +4,7 @@ import { GithubFacade } from "./adapters";
 import { ZodIssue } from "zod";
 import { StatusCodes } from "http-status-codes";
 import { Responses } from "./responses";
-import e from "express";
+import { BOT_CODES } from "./utils/constants";
 
 const paramsValidationFail = async (
   github: GithubFacade,
@@ -79,7 +79,8 @@ const BOT_ERROR_RESPONSES: { [key: string]: string } = {
   BountyTaken: Responses.ALREADY_ASSIGNED_BOUNTY,
   BountyNotFound: Responses.BOUNTY_NOT_FOUND,
   BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND,
-  CloseWrongFrom: Responses.CLOSE_WRONG_FROM
+  CloseWrongFrom: Responses.CLOSE_WRONG_FROM,
+  NotOpenForFunding: Responses.BOUNTY_NOT_OPEN_FOR_FUNDING
 };
 
 export const commandErrorHandler = async (
@@ -97,7 +98,7 @@ export const commandErrorHandler = async (
         commentId,
         e.response?.data.error
       );
-    } else if (e.response?.data.botCode === "CloseActionNotFound") {
+    } else if (e.response?.data.botCode === BOT_CODES.CLOSE_ACTION_NOT_FOUND) {
       return;
     } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
       await github.replyToCommand(

@@ -209,6 +209,12 @@ const USER_INSTALLATION_COMMENT = `
   🔎 See the [installation guide](https://docs.githoney.io/github_setup) for more information. 🔍
 `;
 
+const BOUNTY_NOT_OPEN_FOR_FUNDING = `
+  ### ⚠️ Sorry, the bounty is closed ⚠️
+
+  This bounty is not open for funding. It may have been closed or expired.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -229,5 +235,6 @@ export const Responses = {
   BOUNTY_EXPIRED,
   CLOSE_WRONG_FROM,
   DEADLINE_REACHED,
-  USER_INSTALLATION_COMMENT
+  USER_INSTALLATION_COMMENT,
+  BOUNTY_NOT_OPEN_FOR_FUNDING
 };
