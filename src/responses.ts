@@ -109,13 +109,13 @@ const HELP_COMMAND = `
   **Parameters:**
   
 -  \`amount\`: The ADA amount for the bounty (must be greater than 10 ADA).
--  \`deadline\`: Time limit for the bounty in days (must be at least 5 days).
+-  \`duration\`: Time limit for the bounty in days (must be at least 5 days).
 -  \`address\`: The Cardano wallet address for the reward deposit.
 
 Example:
-> /githoney create-bounty --amount 200 --address addr1* --deadline 14 
+> /githoney create-bounty --amount 200 --address addr1* --duration 14 
 
-(Meaning: Deposit 200 ADA with a 14-day deadline)
+(Meaning: Deposit 200 ADA with a 14-day duraiton)
 
  *** 
 ###  Add More Rewards to a Bounty

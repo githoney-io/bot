@@ -75,7 +75,7 @@ export async function handleComment(
       };
       const bountyIdInfo = {
         amount: parsed.amount,
-        deadline: parsed.deadline,
+        duration: parsed.duration,
         address: parsed.address,
         network: parsed.network || "preprod"
       };

@@ -14,7 +14,7 @@ interface IssueInfo {
 
 interface BountyInfo {
   amount: number;
-  deadline: number;
+  duration: number;
   address: string;
   network: NETWORK;
 }
