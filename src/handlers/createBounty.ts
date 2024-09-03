@@ -1,6 +1,6 @@
 import { GithubFacade } from "../adapters";
 import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
-import { AttachBountyParams } from "../interfaces/core.interface";
+import { CreateBountyParams } from "../interfaces/core.interface";
 import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
@@ -8,8 +8,8 @@ import appConfig from "../config/app-config";
 import { Responses } from "../responses";
 
 // Calls to {BACKEND_URL}/bounty (POST)
-export async function attachBounty(
-  params: AttachBountyParams,
+export async function createBounty(
+  params: CreateBountyParams,
   github: GithubFacade
 ) {
   try {

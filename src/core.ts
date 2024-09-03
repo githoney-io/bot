@@ -1,7 +1,7 @@
 import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
-import { acceptBounty, attachBounty, fundBounty } from "./handlers";
+import { acceptBounty, createBounty, fundBounty } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
 import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
@@ -55,7 +55,7 @@ export async function handleComment(
     case HELP_COMMAND:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
-    case VALID_COMMANDS.ATTACH:
+    case VALID_COMMANDS.CREATE:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
@@ -81,7 +81,7 @@ export async function handleComment(
       };
       const commentId = comment.id;
 
-      await attachBounty(
+      await createBounty(
         { creator: comment.user.login, issueInfo, bountyIdInfo, commentId },
         github
       );

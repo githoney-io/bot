@@ -1,6 +1,5 @@
 import { GithubFacade } from "../adapters";
 import { NETWORK } from "../utils/constants";
-import { User } from "@octokit/webhooks-types";
 
 interface IssueInfo {
   number: number;
@@ -20,7 +19,7 @@ interface BountyInfo {
   network: NETWORK;
 }
 
-interface AttachBountyParams {
+interface CreateBountyParams {
   creator: string;
   issueInfo: IssueInfo;
   bountyIdInfo: BountyInfo;
@@ -64,7 +63,7 @@ interface CloseHandler {
 }
 
 export {
-  AttachBountyParams,
+  CreateBountyParams,
   FundBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,

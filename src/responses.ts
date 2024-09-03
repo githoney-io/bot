@@ -104,7 +104,7 @@ const HELP_COMMAND = `
  Hi! I'm the **Githoney Bot**🤖. Here are the commands you can use:
 
 ### Create a new bounty:
-\`attach-bounty\`: Creates a new bounty, and attaches it to the GitHub issue. Can only be performed in GitHub issue without and existing bounty. 
+\`create-bounty\`: Creates a new bounty, and attaches it to the GitHub issue. Can only be performed in GitHub issue without and existing bounty. 
 
   **Parameters:**
   
@@ -113,7 +113,7 @@ const HELP_COMMAND = `
 -  \`address\`: The Cardano wallet address for the reward deposit.
 
 Example:
-> /githoney attach-bounty --amount 200 --address addr1* --deadline 14 
+> /githoney create-bounty --amount 200 --address addr1* --deadline 14 
 
 (Meaning: Deposit 200 ADA with a 14-day deadline)
 
@@ -176,7 +176,7 @@ const WRONG_COMMAND_USE = `
   ### Sorry, you can't use this command here. 😔
 
   Remember, you can only use the:
-  - \`attach-bounty\` command in open issues.
+  - \`create-bounty\` command in open issues.
   - \`fund-bounty\` command in open issues.
   - \`accept-bounty\` command in open PRs.
 `;
