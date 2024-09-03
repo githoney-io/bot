@@ -4,12 +4,12 @@ interface ICreateBountySuccess {
   address: string;
   bountyId: number;
   signUrl: string;
-  isDev?: boolean;
+  isTestnet?: boolean;
 }
 const CREATE_BOUNTY_SUCCESS = (params: ICreateBountySuccess) => `
   ### New bounty created for this issue! 🎊
 
-  ${params.isDev ? "#### Dev mode" : ""}
+  ${params.isTestnet ? "#### TESTNET MODE" : ""}
 
   > 🍯 Reward: **${params.amount} ADA**
   > ⏰ Work deadline: **${new Date(params.deadline).toUTCString()}**

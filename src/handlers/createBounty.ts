@@ -1,7 +1,7 @@
 import { GithubFacade } from "../adapters";
 import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
 import { CreateBountyParams } from "../interfaces/core.interface";
-import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
+import { NETWORK, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
@@ -63,7 +63,7 @@ export async function createBounty(
         bountyId: bounty.id,
         deadline: Date.now() + deadline_ut,
         signUrl,
-        isDev: network === "preprod"
+        isTestnet: network === NETWORK.PREPROD
       })
     );
 

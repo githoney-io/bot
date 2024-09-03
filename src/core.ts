@@ -4,7 +4,7 @@ import minimist from "minimist";
 import { acceptBounty, createBounty, sponsorBounty } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
-import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
+import { HELP_COMMAND, NETWORK, VALID_COMMANDS } from "./utils/constants";
 
 export async function handleComment(
   github: GithubFacade,
@@ -77,7 +77,7 @@ export async function handleComment(
         amount: parsed.amount,
         duration: parsed.duration,
         address: parsed.address,
-        network: parsed.network || "preprod"
+        network: NETWORK.PREPROD
       };
       const commentId = comment.id;
 
