@@ -1,23 +1,22 @@
-import { AxiosError } from "axios";
 import { GithubFacade } from "../adapters";
 import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
-import { FundBountyParams } from "../interfaces/core.interface";
+import { SponsorBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
 
 // Calls to {BACKEND_URL}/bounty/sponsor (POST)
-export async function fundBounty(
-  params: FundBountyParams,
+export async function sponsorBounty(
+  params: SponsorBountyParams,
   github: GithubFacade
 ) {
   try {
-    const { fundCommentId, fundInfo, funder: username } = params;
-    await github.acknowledgeCommand(fundCommentId);
+    const { sponsorCommentId, sponsorInfo, sponsor: username } = params;
+    await github.acknowledgeCommand(sponsorCommentId);
 
     const data = await getGithubUserData(username, github);
 
-    const tokens = fundInfo.tokens.map((t) => {
+    const tokens = sponsorInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
       return name.toLowerCase() === "ada"
         ? { name, amount: Number(amount) }
@@ -26,18 +25,18 @@ export async function fundBounty(
 
     // TODO: remove this when the backend accepts other currencies
     if (tokens.some((t) => t === undefined)) {
-      await github.replyToCommand(fundInfo.issue, Responses.PLEASE_USE_ADA);
+      await github.replyToCommand(sponsorInfo.issue, Responses.PLEASE_USE_ADA);
       return;
     }
 
     const {
-      data: { bounty, fundingId }
+      data: { bounty, sponsorId }
     } = await callEp("bounty/sponsor", {
-      address: fundInfo.address,
+      address: sponsorInfo.address,
       tokens,
-      issueNumber: fundInfo.issue,
+      issueNumber: sponsorInfo.issue,
       platform: "github",
-      funder: {
+      sponsor: {
         username: data.login,
         name: data.name,
         id: data.id,
@@ -49,23 +48,23 @@ export async function fundBounty(
         location: data.location,
         twitterUsername: data.twitter_username
       },
-      orgName: fundInfo.organization,
-      repoName: fundInfo.repository
+      orgName: sponsorInfo.organization,
+      repoName: sponsorInfo.repository
     });
 
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${fundingId}`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${sponsorId}`;
     await github.replyToCommand(
-      fundInfo.issue,
-      Responses.FUND_BOUNTY_SUCCESS(signUrl)
+      sponsorInfo.issue,
+      Responses.SPONSOR_BOUNTY_SUCCESS(signUrl)
     );
   } catch (e) {
-    console.error(chalk.red(`Error funding bounty. ${e}`));
+    console.error(chalk.red(`Error sponsoring bounty. ${e}`));
 
     await commandErrorHandler(
       e,
-      params.fundInfo.issue,
+      params.sponsorInfo.issue,
       github,
-      params.fundCommentId
+      params.sponsorCommentId
     );
   }
 }

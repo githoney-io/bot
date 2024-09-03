@@ -1,7 +1,7 @@
 import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
-import { acceptBounty, createBounty, fundBounty } from "./handlers";
+import { acceptBounty, createBounty, sponsorBounty } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
 import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
@@ -86,24 +86,24 @@ export async function handleComment(
         github
       );
       break;
-    case VALID_COMMANDS.FUND:
+    case VALID_COMMANDS.SPONSOR:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
         );
 
-      const fundInfo = {
+      const sponsorInfo = {
         issue: issue.number,
         tokens: parsed.tokens?.split("&") || [],
         address: parsed.address,
         organization: github.owner,
         repository: github.repo
       };
-      const fundCommentId = comment.id;
+      const sponsorCommentId = comment.id;
 
-      await fundBounty(
-        { funder: comment.user.login, fundInfo, fundCommentId },
+      await sponsorBounty(
+        { sponsor: comment.user.login, sponsorInfo, sponsorCommentId },
         github
       );
       break;

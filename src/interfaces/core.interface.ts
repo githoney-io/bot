@@ -26,16 +26,16 @@ interface CreateBountyParams {
   commentId: number;
 }
 
-interface FundBountyParams {
-  funder: string;
-  fundInfo: {
+interface SponsorBountyParams {
+  sponsor: string;
+  sponsorInfo: {
     issue: number;
     tokens: string[];
     address: string;
     organization: string;
     repository: string;
   };
-  fundCommentId: number;
+  sponsorCommentId: number;
 }
 
 interface AcceptBountyParams {
@@ -64,7 +64,7 @@ interface CloseHandler {
 
 export {
   CreateBountyParams,
-  FundBountyParams,
+  SponsorBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
   BountyInfo,

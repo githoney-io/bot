@@ -34,10 +34,11 @@ const BOUNTY_EXPIRED = `
   ⏳ Sorry, this bounty has expired. ⏳
 `;
 
-const FUND_BOUNTY_SUCCESS = (signUrl: string) => `
-  ### 🎉 The bounty has been funded! 🎉
+const SPONSOR_BOUNTY_SUCCESS = (signUrl: string) => `
+  ### 🎉 The sponsorship has been accepted and is ready to be funded 🎉
 
-  You can sign the transaction [here](${signUrl}).
+  The next step is **to deposit the fund**.
+  You can use this [link](${signUrl}) to execute the transaction.
 `;
 
 const ACCEPT_BOUNTY_SUCCESS = (signUrl: string) => `
@@ -115,11 +116,11 @@ const HELP_COMMAND = `
 Example:
 > /githoney create-bounty --amount 200 --address addr1* --duration 14 
 
-(Meaning: Deposit 200 ADA with a 14-day duraiton)
+(Meaning: Deposit 200 ADA with a 14-day duration)
 
  *** 
 ###  Add More Rewards to a Bounty
- \`fund-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
+ \`sponsor-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
 
 **Parameters:**
 
@@ -128,7 +129,7 @@ Example:
 
 Example:
 
-> /githoney fund-bounty --tokens ADA=100 --address addr1*
+> /githoney sponsor-bounty --tokens ADA=100 --address addr1*
 
 (Meaning: Add 100 ADA to the bounty)
 
@@ -177,7 +178,7 @@ const WRONG_COMMAND_USE = `
 
   Remember, you can only use the:
   - \`create-bounty\` command in open issues.
-  - \`fund-bounty\` command in open issues.
+  - \`sponsor-bounty\` command in open issues.
   - \`accept-bounty\` command in open PRs.
 `;
 
@@ -209,10 +210,10 @@ const USER_INSTALLATION_COMMENT = `
   🔎 See the [installation guide](https://docs.githoney.io/github_setup) for more information. 🔍
 `;
 
-const BOUNTY_NOT_OPEN_FOR_FUNDING = `
+const BOUNTY_NOT_OPEN_TO_SPONSOR = `
   ### ⚠️ Sorry, the bounty is closed ⚠️
 
-  This bounty is not open for funding. It may have been closed or expired.
+  This bounty is not open to sponsor. It may have been closed or expired.
 `;
 
 export const Responses = {
@@ -229,12 +230,12 @@ export const Responses = {
   PARAMETERS_WRONG,
   ACCEPT_BOUNTY_SUCCESS,
   MERGE_BOUNTY_SUCCESS,
-  FUND_BOUNTY_SUCCESS,
+  SPONSOR_BOUNTY_SUCCESS,
   CREATE_BOUNTY_SUCCESS,
   BACKEND_ERROR,
   BOUNTY_EXPIRED,
   CLOSE_WRONG_FROM,
   DEADLINE_REACHED,
   USER_INSTALLATION_COMMENT,
-  BOUNTY_NOT_OPEN_FOR_FUNDING
+  BOUNTY_NOT_OPEN_TO_SPONSOR
 };
