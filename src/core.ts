@@ -74,7 +74,7 @@ export async function handleComment(
         labels: []
       };
       const bountyIdInfo = {
-        amount: parsed.amount,
+        tokens: parsed.tokens?.split("&") || [],
         duration: parsed.duration,
         address: parsed.address,
         network: NETWORK.PREPROD

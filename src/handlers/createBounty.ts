@@ -15,13 +15,25 @@ export async function createBounty(
   try {
     const { creator, issueInfo, bountyIdInfo, commentId } = params;
     const { labels, source, number: issueNumber } = issueInfo;
-    const { amount, duration, address, network } = bountyIdInfo;
-
-    await github.acknowledgeCommand(commentId);
+    const { duration, address, network } = bountyIdInfo;
 
     const deadline_ut = duration * ONE_DAY_MS;
-    const amountADA = amount * ONE_ADA_IN_LOVELACE;
 
+    const tokens = bountyIdInfo.tokens.map((t) => {
+      const [name, amount] = t.split("=");
+      return name.toLowerCase() === "ada"
+        ? { name, amount: Number(amount) }
+        : undefined;
+    });
+
+    // TODO: remove this when the backend accepts other currencies
+    if (tokens.some((t) => t === undefined)) {
+      await github.rejectCommand(commentId);
+      await github.replyToCommand(issueNumber, Responses.PLEASE_USE_ADA);
+      return;
+    }
+
+    await github.acknowledgeCommand(commentId);
     const creatorData = await getGithubUserData(creator, github);
 
     const {
@@ -29,7 +41,7 @@ export async function createBounty(
     } = await callEp("bounty", {
       title: issueInfo.title,
       description: issueInfo.description,
-      amount: amountADA,
+      tokens,
       duration: deadline_ut,
       creator: {
         username: creatorData.login,
@@ -55,11 +67,12 @@ export async function createBounty(
     console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create?fundingId=${fundingId}`;
+    const adaAmount = tokens.find((t) => t!.name === "ada")!.amount;
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
         address,
-        amount,
+        amount: adaAmount,
         bountyId: bounty.id,
         deadline: Date.now() + deadline_ut,
         signUrl,
@@ -68,7 +81,7 @@ export async function createBounty(
     );
 
     callTwBot(
-      amount,
+      adaAmount,
       issueInfo.organization,
       issueInfo.repository,
       issueInfo.number,

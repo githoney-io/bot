@@ -13,7 +13,7 @@ interface IssueInfo {
 }
 
 interface BountyInfo {
-  amount: number;
+  tokens: string[];
   duration: number;
   address: string;
   network: NETWORK;
