@@ -13,13 +13,14 @@ export async function createBounty(
   github: GithubFacade
 ) {
   try {
-    const { creator, issueInfo, bountyIdInfo, commentId } = params;
+    const { bountyInfo, commentId } = params;
+    const { creatorUsername, issueInfo, bountyData } = bountyInfo;
+    const { duration, address, network } = bountyData;
     const { labels, source, number: issueNumber } = issueInfo;
-    const { duration, address, network } = bountyIdInfo;
 
     const deadline_ut = duration * ONE_DAY_MS;
 
-    const tokens = bountyIdInfo.tokens.map((t) => {
+    const tokens = bountyData.tokens.map((t) => {
       const [name, amount] = t.split("=");
       return name.toLowerCase() === "ada"
         ? { name, amount: Number(amount) }
@@ -34,34 +35,23 @@ export async function createBounty(
     }
 
     await github.acknowledgeCommand(commentId);
-    const creatorData = await getGithubUserData(creator, github);
+    const creatorData = await getGithubUserData(creatorUsername, github);
 
     const {
       data: { bounty, fundingId }
     } = await callEp("bounty", {
+      address,
+      tokens,
       title: issueInfo.title,
       description: issueInfo.description,
-      tokens,
       duration: deadline_ut,
-      creator: {
-        username: creatorData.login,
-        name: creatorData.name,
-        id: creatorData.id,
-        email: creatorData.email,
-        avatarUrl: creatorData.avatar_url,
-        description: creatorData.bio,
-        pageUrl: creatorData.blog,
-        userUrl: creatorData.html_url,
-        location: creatorData.location,
-        twitterUsername: creatorData.twitter_username
-      },
+      creator: creatorData,
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
       categories: labels,
       organization: issueInfo.organization,
       repository: issueInfo.repository,
       issue: issueInfo.number,
-      address,
       issueUrl: issueInfo.issueUrl
     });
     console.debug(bounty);
@@ -92,7 +82,7 @@ export async function createBounty(
 
     await commandErrorHandler(
       e,
-      params.issueInfo.number,
+      params.bountyInfo.issueInfo.number,
       github,
       params.commentId
     );

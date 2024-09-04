@@ -12,7 +12,7 @@ interface IssueInfo {
   issueUrl: string;
 }
 
-interface BountyInfo {
+interface BountyData {
   tokens: string[];
   duration: number;
   address: string;
@@ -20,22 +20,24 @@ interface BountyInfo {
 }
 
 interface CreateBountyParams {
-  creator: string;
-  issueInfo: IssueInfo;
-  bountyIdInfo: BountyInfo;
+  bountyInfo: {
+    creatorUsername: string;
+    issueInfo: IssueInfo;
+    bountyData: BountyData;
+  };
   commentId: number;
 }
 
 interface SponsorBountyParams {
-  sponsor: string;
   sponsorInfo: {
+    sponsorUsername: string;
     issue: number;
     tokens: string[];
     address: string;
     organization: string;
     repository: string;
   };
-  sponsorCommentId: number;
+  commentId: number;
 }
 
 interface AcceptBountyParams {
@@ -67,6 +69,6 @@ export {
   SponsorBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
-  BountyInfo,
+  BountyData,
   CloseHandler
 };

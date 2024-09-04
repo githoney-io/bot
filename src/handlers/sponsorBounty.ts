@@ -11,10 +11,8 @@ export async function sponsorBounty(
   github: GithubFacade
 ) {
   try {
-    const { sponsorCommentId, sponsorInfo, sponsor: username } = params;
-    await github.acknowledgeCommand(sponsorCommentId);
-
-    const data = await getGithubUserData(username, github);
+    const { sponsorInfo, commentId } = params;
+    const { sponsorUsername, address, organization, repository } = sponsorInfo;
 
     const tokens = sponsorInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
@@ -29,27 +27,19 @@ export async function sponsorBounty(
       return;
     }
 
+    await github.acknowledgeCommand(commentId);
+    const sponsorData = await getGithubUserData(sponsorUsername, github);
+
     const {
       data: { bounty, sponsorId }
     } = await callEp("bounty/sponsor", {
-      address: sponsorInfo.address,
+      address,
       tokens,
       issueNumber: sponsorInfo.issue,
       platform: "github",
-      sponsor: {
-        username: data.login,
-        name: data.name,
-        id: data.id,
-        email: data.email,
-        avatarUrl: data.avatar_url,
-        description: data.bio,
-        pageUrl: data.blog,
-        userUrl: data.html_url,
-        location: data.location,
-        twitterUsername: data.twitter_username
-      },
-      orgName: sponsorInfo.organization,
-      repoName: sponsorInfo.repository
+      sponsor: sponsorData,
+      orgName: organization,
+      repoName: repository
     });
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${sponsorId}`;
@@ -64,7 +54,7 @@ export async function sponsorBounty(
       e,
       params.sponsorInfo.issue,
       github,
-      params.sponsorCommentId
+      params.commentId
     );
   }
 }

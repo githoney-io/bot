@@ -15,26 +15,14 @@ export async function acceptBounty(
     const { issueNumber, commentId, bountyId, address, assignee } = params;
 
     await github.acknowledgeCommand(commentId);
-
     const assigneeData = await getGithubUserData(assignee, github);
 
     const {
       data: { bounty }
     }: IBountyCreate = await callEp("bounty/assign", {
-      bountyId: bountyId,
-      assignee: {
-        name: assigneeData.name,
-        username: assigneeData.login,
-        id: assigneeData.id,
-        email: assigneeData.email,
-        avatarUrl: assigneeData.avatar_url,
-        description: assigneeData.bio,
-        pageUrl: assigneeData.blog,
-        userUrl: assigneeData.html_url,
-        location: assigneeData.location,
-        twitterUsername: assigneeData.twitter_username
-      },
       address,
+      bountyId: bountyId,
+      assignee: assigneeData,
       platform: "github",
       prNumber: issueNumber
     });
