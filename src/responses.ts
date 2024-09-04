@@ -102,19 +102,19 @@ const ALREADY_ASSIGNED_BOUNTY = `
 `;
 
 const HELP_COMMAND = `
- Hi! I'm the **Githoney Bot**🤖. Here are the commands you can use:
+ Hi! I'm the **Githoney Bot** 🤖. Here are the commands you can use:
 
 ### Create a new bounty:
 \`create-bounty\`: Creates a new bounty, and attaches it to the GitHub issue. Can only be performed in GitHub issue without and existing bounty. 
 
   **Parameters:**
   
--  \`amount\`: The ADA amount for the bounty (must be greater than 10 ADA).
+-  \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
 -  \`duration\`: Time limit for the bounty in days (must be at least 5 days).
 -  \`address\`: The Cardano wallet address for the reward deposit.
 
 Example:
-> /githoney create-bounty --amount 200 --address addr1* --duration 14 
+> /githoney create-bounty --tokens ADA=200 --address addr1* --duration 14 
 
 (Meaning: Deposit 200 ADA with a 14-day duration)
 
@@ -124,7 +124,7 @@ Example:
 
 **Parameters:**
 
-- \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ
+- \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
 - \`address\`: The Cardano wallet address for the additional reward deposit.
 
 Example:
