@@ -4,12 +4,12 @@ interface ICreateBountySuccess {
   address: string;
   bountyId: number;
   signUrl: string;
-  isDev?: boolean;
+  isTestnet?: boolean;
 }
 const CREATE_BOUNTY_SUCCESS = (params: ICreateBountySuccess) => `
   ### New bounty created for this issue! 🎊
 
-  ${params.isDev ? "#### Dev mode" : ""}
+  ${params.isTestnet ? "#### TESTNET MODE" : ""}
 
   > 🍯 Reward: **${params.amount} ADA**
   > ⏰ Work deadline: **${new Date(params.deadline).toUTCString()}**
@@ -34,10 +34,11 @@ const BOUNTY_EXPIRED = `
   ⏳ Sorry, this bounty has expired. ⏳
 `;
 
-const FUND_BOUNTY_SUCCESS = (signUrl: string) => `
-  ### 🎉 The bounty has been funded! 🎉
+const SPONSOR_BOUNTY_SUCCESS = (signUrl: string) => `
+  ### 🎉 The sponsorship has been accepted and is ready to be funded 🎉
 
-  You can sign the transaction [here](${signUrl}).
+  The next step is **to deposit the fund**.
+  You can use this [link](${signUrl}) to execute the transaction.
 `;
 
 const ACCEPT_BOUNTY_SUCCESS = (signUrl: string) => `
@@ -101,34 +102,34 @@ const ALREADY_ASSIGNED_BOUNTY = `
 `;
 
 const HELP_COMMAND = `
- Hi! I'm the **Githoney Bot**🤖. Here are the commands you can use:
+ Hi! I'm the **Githoney Bot** 🤖. Here are the commands you can use:
 
 ### Create a new bounty:
-\`attach-bounty\`: Creates a new bounty, and attaches it to the GitHub issue. Can only be performed in GitHub issue without and existing bounty. 
+\`create-bounty\`: Creates a new bounty, and attaches it to the GitHub issue. Can only be performed in GitHub issue without and existing bounty. 
 
   **Parameters:**
   
--  \`amount\`: The ADA amount for the bounty (must be greater than 10 ADA).
--  \`deadline\`: Time limit for the bounty in days (must be at least 5 days).
+-  \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
+-  \`duration\`: Time limit for the bounty in days (must be at least 5 days).
 -  \`address\`: The Cardano wallet address for the reward deposit.
 
 Example:
-> /githoney attach-bounty --amount 200 --address addr1* --deadline 14 
+> /githoney create-bounty --tokens ADA=200 --address addr1* --duration 14 
 
-(Meaning: Deposit 200 ADA with a 14-day deadline)
+(Meaning: Deposit 200 ADA with a 14-day duration)
 
  *** 
 ###  Add More Rewards to a Bounty
- \`fund-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
+ \`sponsor-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
 
 **Parameters:**
 
-- \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ
+- \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
 - \`address\`: The Cardano wallet address for the additional reward deposit.
 
 Example:
 
-> /githoney fund-bounty --tokens ADA=100 --address addr1*
+> /githoney sponsor-bounty --tokens ADA=100 --address addr1*
 
 (Meaning: Add 100 ADA to the bounty)
 
@@ -176,8 +177,8 @@ const WRONG_COMMAND_USE = `
   ### Sorry, you can't use this command here. 😔
 
   Remember, you can only use the:
-  - \`attach-bounty\` command in open issues.
-  - \`fund-bounty\` command in open issues.
+  - \`create-bounty\` command in open issues.
+  - \`sponsor-bounty\` command in open issues.
   - \`accept-bounty\` command in open PRs.
 `;
 
@@ -209,10 +210,10 @@ const USER_INSTALLATION_COMMENT = `
   🔎 See the [installation guide](https://docs.githoney.io/github_setup) for more information. 🔍
 `;
 
-const BOUNTY_NOT_OPEN_FOR_FUNDING = `
+const BOUNTY_NOT_OPEN_TO_SPONSOR = `
   ### ⚠️ Sorry, the bounty is closed ⚠️
 
-  This bounty is not open for funding. It may have been closed or expired.
+  This bounty is not open to sponsor. It may have been closed or expired.
 `;
 
 export const Responses = {
@@ -229,12 +230,12 @@ export const Responses = {
   PARAMETERS_WRONG,
   ACCEPT_BOUNTY_SUCCESS,
   MERGE_BOUNTY_SUCCESS,
-  FUND_BOUNTY_SUCCESS,
+  SPONSOR_BOUNTY_SUCCESS,
   CREATE_BOUNTY_SUCCESS,
   BACKEND_ERROR,
   BOUNTY_EXPIRED,
   CLOSE_WRONG_FROM,
   DEADLINE_REACHED,
   USER_INSTALLATION_COMMENT,
-  BOUNTY_NOT_OPEN_FOR_FUNDING
+  BOUNTY_NOT_OPEN_TO_SPONSOR
 };

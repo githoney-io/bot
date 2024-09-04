@@ -1,10 +1,15 @@
 import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue } from "@octokit/webhooks-types";
 import minimist from "minimist";
-import { acceptBounty, attachBounty, fundBounty } from "./handlers";
+import { acceptBounty, createBounty, sponsorBounty } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
-import { HELP_COMMAND, VALID_COMMANDS } from "./utils/constants";
+import { HELP_COMMAND, NETWORK, VALID_COMMANDS } from "./utils/constants";
+import {
+  AcceptBountyParams,
+  CreateBountyParams,
+  SponsorBountyParams
+} from "./interfaces/core.interface";
 
 export async function handleComment(
   github: GithubFacade,
@@ -55,57 +60,58 @@ export async function handleComment(
     case HELP_COMMAND:
       await github.replyToCommand(issue.number, Responses.HELP_COMMAND);
       break;
-    case VALID_COMMANDS.ATTACH:
+    case VALID_COMMANDS.CREATE:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
         );
 
-      const issueInfo = {
-        number: issue.number,
-        title: issue.title,
-        description: issue.body || "",
-        link: issue.html_url,
-        source: "GitHub",
-        organization: github.owner,
-        repository: github.repo,
-        issueUrl: issue.html_url,
-        labels: []
+      const bountyParams: CreateBountyParams = {
+        bountyInfo: {
+          creatorUsername: comment.user.login,
+          issueInfo: {
+            number: issue.number,
+            title: issue.title,
+            description: issue.body || "",
+            source: "GitHub",
+            organization: github.owner,
+            repository: github.repo,
+            issueUrl: issue.html_url,
+            labels: []
+          },
+          bountyData: {
+            tokens: parsed.tokens?.split("&") || [],
+            duration: parsed.duration,
+            address: parsed.address,
+            network: NETWORK.PREPROD
+          }
+        },
+        commentId: comment.id
       };
-      const bountyIdInfo = {
-        amount: parsed.amount,
-        deadline: parsed.deadline,
-        address: parsed.address,
-        network: parsed.network || "preprod"
-      };
-      const commentId = comment.id;
 
-      await attachBounty(
-        { creator: comment.user.login, issueInfo, bountyIdInfo, commentId },
-        github
-      );
+      await createBounty(bountyParams, github);
       break;
-    case VALID_COMMANDS.FUND:
+    case VALID_COMMANDS.SPONSOR:
       if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
         );
 
-      const fundInfo = {
-        issue: issue.number,
-        tokens: parsed.tokens?.split("&") || [],
-        address: parsed.address,
-        organization: github.owner,
-        repository: github.repo
+      const sponsorParams: SponsorBountyParams = {
+        sponsorInfo: {
+          sponsorUsername: comment.user.login,
+          issue: issue.number,
+          tokens: parsed.tokens?.split("&") || [],
+          address: parsed.address,
+          organization: github.owner,
+          repository: github.repo
+        },
+        commentId: comment.id
       };
-      const fundCommentId = comment.id;
 
-      await fundBounty(
-        { funder: comment.user.login, fundInfo, fundCommentId },
-        github
-      );
+      await sponsorBounty(sponsorParams, github);
       break;
     case VALID_COMMANDS.ACCEPT:
       if (!("pull_request" in issue) || issue.state === "closed")
@@ -114,16 +120,15 @@ export async function handleComment(
           Responses.WRONG_COMMAND_USE
         );
 
-      await acceptBounty(
-        {
-          issueNumber: issue.number,
-          commentId: comment.id,
-          bountyId: parsed.bountyId,
-          address: parsed.address,
-          assignee: comment.user.login
-        },
-        github
-      );
+      const acceptParams: AcceptBountyParams = {
+        issueNumber: issue.number,
+        commentId: comment.id,
+        bountyId: parsed.bountyId,
+        address: parsed.address,
+        assignee: comment.user.login
+      };
+
+      await acceptBounty(acceptParams, github);
       break;
     default:
       console.warn("unknown command", parsed);

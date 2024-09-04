@@ -19,7 +19,7 @@ export const BOT_CODES = {
 
 export const HELP_COMMAND = "help";
 export const VALID_COMMANDS = {
-  ATTACH: "attach-bounty",
-  FUND: "fund-bounty",
+  CREATE: "create-bounty",
+  SPONSOR: "sponsor-bounty",
   ACCEPT: "accept-bounty"
 };

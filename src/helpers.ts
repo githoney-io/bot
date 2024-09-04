@@ -64,7 +64,18 @@ const getGithubUserData = async (username: string, github: GithubFacade) => {
     username
   });
 
-  return res.data;
+  return {
+    username: res.data.login,
+    name: res.data.name,
+    id: res.data.id,
+    email: res.data.email,
+    avatarUrl: res.data.avatar_url,
+    description: res.data.bio,
+    pageUrl: res.data.blog,
+    userUrl: res.data.html_url,
+    location: res.data.location,
+    twitterUsername: res.data.twitter_username
+  };
 };
 
 const txUrl = (txHash: string, network: string) => {
@@ -80,7 +91,7 @@ const BOT_ERROR_RESPONSES: { [key: string]: string } = {
   BountyNotFound: Responses.BOUNTY_NOT_FOUND,
   BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND,
   CloseWrongFrom: Responses.CLOSE_WRONG_FROM,
-  NotOpenForFunding: Responses.BOUNTY_NOT_OPEN_FOR_FUNDING
+  NotOpenForFunding: Responses.BOUNTY_NOT_OPEN_TO_SPONSOR
 };
 
 export const commandErrorHandler = async (

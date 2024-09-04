@@ -1,74 +1,77 @@
 import { GithubFacade } from "../adapters";
 import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
-import { AttachBountyParams } from "../interfaces/core.interface";
-import { ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
+import { CreateBountyParams } from "../interfaces/core.interface";
+import { NETWORK, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
 
 // Calls to {BACKEND_URL}/bounty (POST)
-export async function attachBounty(
-  params: AttachBountyParams,
+export async function createBounty(
+  params: CreateBountyParams,
   github: GithubFacade
 ) {
   try {
-    const { creator, issueInfo, bountyIdInfo, commentId } = params;
+    const { bountyInfo, commentId } = params;
+    const { creatorUsername, issueInfo, bountyData } = bountyInfo;
+    const { duration, address, network } = bountyData;
     const { labels, source, number: issueNumber } = issueInfo;
-    const { amount, deadline, address, network } = bountyIdInfo;
+
+    const deadline_ut = duration * ONE_DAY_MS;
+
+    const tokens = bountyData.tokens.map((t) => {
+      const [name, amount] = t.split("=");
+      return name.toLowerCase() === "ada"
+        ? { name, amount: Number(amount) }
+        : undefined;
+    });
+
+    // TODO: remove this when the backend accepts other currencies
+    if (tokens.some((t) => t === undefined)) {
+      await github.rejectCommand(commentId);
+      await github.replyToCommand(issueNumber, Responses.PLEASE_USE_ADA);
+      return;
+    }
 
     await github.acknowledgeCommand(commentId);
-
-    const deadline_ut = deadline * ONE_DAY_MS;
-    const amountADA = amount * ONE_ADA_IN_LOVELACE;
-
-    const creatorData = await getGithubUserData(creator, github);
+    const creatorData = await getGithubUserData(creatorUsername, github);
 
     const {
       data: { bounty, fundingId }
     } = await callEp("bounty", {
+      address,
+      tokens,
       title: issueInfo.title,
       description: issueInfo.description,
-      amount: amountADA,
-      deadline: deadline_ut,
-      creator: {
-        username: creatorData.login,
-        name: creatorData.name,
-        id: creatorData.id,
-        email: creatorData.email,
-        avatarUrl: creatorData.avatar_url,
-        description: creatorData.bio,
-        pageUrl: creatorData.blog,
-        userUrl: creatorData.html_url,
-        location: creatorData.location,
-        twitterUsername: creatorData.twitter_username
-      },
+      duration: deadline_ut,
+      creator: creatorData,
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
       categories: labels,
       organization: issueInfo.organization,
       repository: issueInfo.repository,
       issue: issueInfo.number,
-      address,
       issueUrl: issueInfo.issueUrl
     });
     console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create?fundingId=${fundingId}`;
+    const adaAmount = tokens.find((t) => t!.name === "ada")!.amount;
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
         address,
-        amount,
+        amount: adaAmount,
         bountyId: bounty.id,
         deadline: Date.now() + deadline_ut,
         signUrl,
-        isDev: network === "preprod"
+        isTestnet: network === NETWORK.PREPROD
       })
     );
 
     callTwBot(
-      amount,
+      adaAmount,
       issueInfo.organization,
       issueInfo.repository,
       issueInfo.number,
@@ -79,7 +82,7 @@ export async function attachBounty(
 
     await commandErrorHandler(
       e,
-      params.issueInfo.number,
+      params.bountyInfo.issueInfo.number,
       github,
       params.commentId
     );

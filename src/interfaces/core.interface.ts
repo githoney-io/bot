@@ -1,6 +1,5 @@
 import { GithubFacade } from "../adapters";
 import { NETWORK } from "../utils/constants";
-import { User } from "@octokit/webhooks-types";
 
 interface IssueInfo {
   number: number;
@@ -13,30 +12,32 @@ interface IssueInfo {
   issueUrl: string;
 }
 
-interface BountyInfo {
-  amount: number;
-  deadline: number;
+interface BountyData {
+  tokens: string[];
+  duration: number;
   address: string;
   network: NETWORK;
 }
 
-interface AttachBountyParams {
-  creator: string;
-  issueInfo: IssueInfo;
-  bountyIdInfo: BountyInfo;
+interface CreateBountyParams {
+  bountyInfo: {
+    creatorUsername: string;
+    issueInfo: IssueInfo;
+    bountyData: BountyData;
+  };
   commentId: number;
 }
 
-interface FundBountyParams {
-  funder: string;
-  fundInfo: {
+interface SponsorBountyParams {
+  sponsorInfo: {
+    sponsorUsername: string;
     issue: number;
     tokens: string[];
     address: string;
     organization: string;
     repository: string;
   };
-  fundCommentId: number;
+  commentId: number;
 }
 
 interface AcceptBountyParams {
@@ -64,10 +65,10 @@ interface CloseHandler {
 }
 
 export {
-  AttachBountyParams,
-  FundBountyParams,
+  CreateBountyParams,
+  SponsorBountyParams,
   AcceptBountyParams,
   ReclaimBountyParams,
-  BountyInfo,
+  BountyData,
   CloseHandler
 };

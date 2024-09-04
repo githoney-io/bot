@@ -1,5 +1,5 @@
 export * from "./acceptBounty";
-export * from "./attachBounty";
-export * from "./fundBounty";
+export * from "./createBounty";
+export * from "./sponsorBounty";
 export * from "./closeBounty";
 export * from "./mergeBounty";
