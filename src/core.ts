@@ -8,8 +8,10 @@ import { HELP_COMMAND, NETWORK, VALID_COMMANDS } from "./utils/constants";
 import {
   AcceptBountyParams,
   CreateBountyParams,
+  LinkBountyParams,
   SponsorBountyParams
 } from "./interfaces/core.interface";
+import { linkBounty } from "./handlers/linkBounty";
 
 export async function handleComment(
   github: GithubFacade,
@@ -114,7 +116,7 @@ export async function handleComment(
       await sponsorBounty(sponsorParams, github);
       break;
     case VALID_COMMANDS.ACCEPT:
-      if (!("pull_request" in issue) || issue.state === "closed")
+      if ("pull_request" in issue || issue.state === "closed")
         return await github.replyToCommand(
           issue.number,
           Responses.WRONG_COMMAND_USE
@@ -129,6 +131,22 @@ export async function handleComment(
       };
 
       await acceptBounty(acceptParams, github);
+      break;
+    case VALID_COMMANDS.LINK:
+      if (!("pull_request" in issue) || issue.state === "closed")
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
+      const linkParams: LinkBountyParams = {
+        bountyId: parsed.bountyId,
+        commentId: comment.id,
+        contributor: comment.user.login,
+        issueNumber: issue.number
+      };
+
+      await linkBounty(linkParams, github);
       break;
     default:
       console.warn("unknown command", parsed);
