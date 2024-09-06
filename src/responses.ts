@@ -148,6 +148,19 @@ Example:
 > /githoney accept-bounty --bountyId 123 --address addr1*
 
 *** 
+### Link a Pull Request to a Bounty:
+\`link-bounty\`: The contributor links the current PR with the bounty. Can only be performed in a GitHub PR.
+
+**Parameters:**
+
+-  \`bountyId\`: The unique ID of the bounty.
+
+Example:
+> /githoney link-bounty --bountyId 123 
+
+(Meaning: Link the current PR with the bounty with ID 123)
+
+*** 
 ### Merge/Close Actions on GitHub
 
 Description:  To trigger bounty completion or cancellation, use GitHub's native "Merge Pull Request" or "Close Issue" buttons. The Githoney bot will automatically handle the corresponding actions based on your interaction.
