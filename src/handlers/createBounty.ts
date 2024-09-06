@@ -57,9 +57,7 @@ export async function createBounty(
     console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create?fundingId=${fundingId}`;
-    console.log(tokens);
-    const adaAmount = tokens.find((t) => t!.name === "ada")!.amount;
-    console.log(adaAmount);
+    const adaAmount = tokens.find((t) => t!.name === "ADA")!.amount;
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
