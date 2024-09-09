@@ -168,6 +168,10 @@ export function startBot(params: BotParams) {
       throw Error("no installation defined");
     }
 
+    if (payload.repository.owner.type !== "Organization") {
+      return;
+    }
+
     console.log(`Issue closed for installation ${payload.installation.id}`);
     let installation = await app.getInstallationOctokit(
       payload.installation.id
@@ -196,6 +200,9 @@ export function startBot(params: BotParams) {
       throw Error("no installation defined");
     }
 
+    if (payload.repository.owner.type !== "Organization") {
+      return;
+    }
     if (payload.sender.type !== "User") {
       return;
     }

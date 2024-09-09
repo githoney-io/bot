@@ -14,14 +14,6 @@ export async function handlePRMerged({
   owner
 }: CloseHandler) {
   try {
-    if (owner !== "Organization") {
-      console.debug("Not an organization, ignoring.");
-      return await github.replyToCommand(
-        issueNumber,
-        Responses.USER_INSTALLATION_COMMENT
-      );
-    }
-
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/merge", {
@@ -39,7 +31,5 @@ export async function handlePRMerged({
     );
   } catch (e) {
     console.error(chalk.red(`Error handling merge event. ${e}`));
-
-    await commandErrorHandler(e, issueNumber, github);
   }
 }

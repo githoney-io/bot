@@ -14,14 +14,6 @@ export async function handleBountyClosed({
   owner
 }: CloseHandler) {
   try {
-    if (owner !== "Organization") {
-      console.debug("Not an organization, ignoring.");
-      return await github.replyToCommand(
-        issueNumber,
-        Responses.USER_INSTALLATION_COMMENT
-      );
-    }
-
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/cancel", {
@@ -39,7 +31,5 @@ export async function handleBountyClosed({
     );
   } catch (e) {
     console.error(chalk.red(`Error handling cancel event: ${e}`));
-
-    await commandErrorHandler(e, issueNumber, github);
   }
 }
