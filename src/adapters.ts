@@ -223,8 +223,7 @@ export function startBot(params: BotParams) {
       facade,
       issueNumber: payload.pull_request.number,
       repoName: payload.repository.name,
-      orgName: payload.repository.owner.login,
-      owner: payload.repository.owner.type
+      orgName: payload.repository.owner.login
     };
 
     if (payload.pull_request.merged) {
