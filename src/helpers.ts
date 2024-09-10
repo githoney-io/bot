@@ -59,25 +59,6 @@ const isOtherClientError = (e: AxiosError) =>
   e.response?.status > StatusCodes.BAD_REQUEST &&
   e.response?.status < StatusCodes.INTERNAL_SERVER_ERROR;
 
-const getGithubUserData = async (username: string, github: GithubFacade) => {
-  const res = await github.octokit.rest.users.getByUsername({
-    username
-  });
-
-  return {
-    username: res.data.login,
-    name: res.data.name,
-    id: res.data.id,
-    email: res.data.email,
-    avatarUrl: res.data.avatar_url,
-    description: res.data.bio,
-    pageUrl: res.data.blog,
-    userUrl: res.data.html_url,
-    location: res.data.location,
-    twitterUsername: res.data.twitter_username
-  };
-};
-
 const txUrl = (txHash: string, network: string) => {
   if (network === "preprod") {
     return `https://preprod.cexplorer.io/tx/${txHash}`;
@@ -98,7 +79,8 @@ export const commandErrorHandler = async (
   e: any,
   issueNumber: number,
   github: GithubFacade,
-  commentId?: number
+  commentId?: number,
+  isPrAction: boolean = false
 ) => {
   if (e instanceof AxiosError) {
     if (isBadRequest(e) && commentId) {
@@ -109,7 +91,10 @@ export const commandErrorHandler = async (
         commentId,
         e.response?.data.error
       );
-    } else if (e.response?.data.botCode === BOT_CODES.CLOSE_ACTION_NOT_FOUND) {
+    } else if (
+      isPrAction &&
+      !BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
+    ) {
       return;
     } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
       await github.replyToCommand(
@@ -133,6 +118,5 @@ export {
   callEp,
   txUrl,
   isBadRequest,
-  isOtherClientError,
-  getGithubUserData
+  isOtherClientError
 };

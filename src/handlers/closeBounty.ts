@@ -3,6 +3,7 @@ import { callEp, commandErrorHandler, txUrl } from "../helpers";
 import { CloseHandler } from "../interfaces/core.interface";
 import { IBountyPlusNetwork } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
+import { getGithubOrgData, getGithubRepoData } from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty/cancel (POST)
 export async function handleBountyClosed({
@@ -10,17 +11,19 @@ export async function handleBountyClosed({
   facade: github,
   issueNumber,
   orgName,
-  repoName,
-  owner
+  repoName
 }: CloseHandler) {
   try {
+    const orgData = await getGithubOrgData(orgName, github);
+    const repoData = await getGithubRepoData(orgName, repoName, github);
+
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/cancel", {
       from,
       prNumber: issueNumber,
-      orgName,
-      repoName,
+      organization: orgData,
+      repository: repoData,
       platform: "github"
     });
 
@@ -31,5 +34,7 @@ export async function handleBountyClosed({
     );
   } catch (e) {
     console.error(chalk.red(`Error handling cancel event: ${e}`));
+
+    await commandErrorHandler(e, issueNumber, github, undefined, true);
   }
 }

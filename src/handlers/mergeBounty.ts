@@ -4,22 +4,25 @@ import { CloseHandler } from "../interfaces/core.interface";
 import appConfig from "../config/app-config";
 import { IBountyPlusNetwork } from "../interfaces/bounty.interface";
 import { Responses } from "../responses";
+import { getGithubOrgData, getGithubRepoData } from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty/merge (POST)
 export async function handlePRMerged({
   facade: github,
   issueNumber,
   orgName,
-  repoName,
-  owner
+  repoName
 }: CloseHandler) {
   try {
+    const orgData = await getGithubOrgData(orgName, github);
+    const repoData = await getGithubRepoData(orgName, repoName, github);
+
     const {
       data: { bounty, network }
     }: IBountyPlusNetwork = await callEp("bounty/merge", {
       prNumber: issueNumber,
-      orgName,
-      repoName,
+      organization: orgData,
+      repository: repoData,
       platform: "github"
     });
     console.debug(bounty);
@@ -31,5 +34,7 @@ export async function handlePRMerged({
     );
   } catch (e) {
     console.error(chalk.red(`Error handling merge event. ${e}`));
+
+    await commandErrorHandler(e, issueNumber, github, undefined, true);
   }
 }
