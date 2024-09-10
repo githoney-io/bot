@@ -1,9 +1,14 @@
 import { GithubFacade } from "../adapters";
-import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
+import { callEp, commandErrorHandler } from "../helpers";
 import { SponsorBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
+import {
+  getGithubOrgData,
+  getGithubRepoData,
+  getGithubUserData
+} from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty/sponsor (POST)
 export async function sponsorBounty(
@@ -29,6 +34,12 @@ export async function sponsorBounty(
 
     await github.acknowledgeCommand(commentId);
     const sponsorData = await getGithubUserData(sponsorUsername, github);
+    const orgData = await getGithubOrgData(sponsorInfo.organization, github);
+    const repoData = await getGithubRepoData(
+      sponsorInfo.organization,
+      sponsorInfo.repository,
+      github
+    );
 
     const {
       data: { bounty, sponsorId }
@@ -38,8 +49,8 @@ export async function sponsorBounty(
       issueNumber: sponsorInfo.issue,
       platform: "github",
       sponsor: sponsorData,
-      orgName: organization,
-      repoName: repository
+      organization: orgData,
+      repository: repoData
     });
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${sponsorId}`;

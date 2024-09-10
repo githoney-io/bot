@@ -1,10 +1,11 @@
 import { GithubFacade } from "../adapters";
-import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
+import { callEp, commandErrorHandler } from "../helpers";
 import { IBountyCreate } from "../interfaces/bounty.interface";
 import { AcceptBountyParams } from "../interfaces/core.interface";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
+import { getGithubUserData } from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty/assign (POST)
 export async function acceptBounty(

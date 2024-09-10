@@ -1,11 +1,16 @@
 import { GithubFacade } from "../adapters";
-import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
+import { callEp, commandErrorHandler } from "../helpers";
 import { CreateBountyParams } from "../interfaces/core.interface";
-import { NETWORK, ONE_ADA_IN_LOVELACE, ONE_DAY_MS } from "../utils/constants";
+import { NETWORK, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
+import {
+  getGithubOrgData,
+  getGithubRepoData,
+  getGithubUserData
+} from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty (POST)
 export async function createBounty(
@@ -36,6 +41,12 @@ export async function createBounty(
 
     await github.acknowledgeCommand(commentId);
     const creatorData = await getGithubUserData(creatorUsername, github);
+    const orgData = await getGithubOrgData(issueInfo.organization, github);
+    const repoData = await getGithubRepoData(
+      issueInfo.organization,
+      issueInfo.repository,
+      github
+    );
 
     const {
       data: { bounty, fundingId }
@@ -46,11 +57,11 @@ export async function createBounty(
       description: issueInfo.description,
       duration: deadline_ut,
       creator: creatorData,
+      organization: orgData,
+      repository: repoData,
       network: network.toLowerCase(),
       platform: source.toLowerCase(),
       categories: labels,
-      organization: issueInfo.organization,
-      repository: issueInfo.repository,
       issue: issueInfo.number,
       issueUrl: issueInfo.issueUrl
     });

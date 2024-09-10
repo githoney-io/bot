@@ -192,7 +192,7 @@ const CLOSE_WRONG_FROM = `
 const BOUNTY_HASH_NOT_FOUND = `
   ### ⚠️ Warning ⚠️
 
-  This Bounty creation transaction is not submited yet.
+  The bounty creation transaction is not submited yet.
 `;
 
 const DEADLINE_REACHED = `
