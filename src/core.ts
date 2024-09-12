@@ -21,7 +21,7 @@ const getParsedData = async (
 ) => {
   const commentBody = comment.trim();
 
-  if (!commentBody.startsWith("/testhoney")) {
+  if (!commentBody.startsWith("/githoney")) {
     console.debug("Skipping because not directed to bot");
     return;
   }
