@@ -12,7 +12,10 @@ export async function linkBounty(
   try {
     const { bountyId, commentId, contributor, issueNumber } = params;
 
-    await github.acknowledgeCommand(commentId);
+    if (commentId) {
+      await github.acknowledgeCommand(commentId);
+    }
+
     const contributorData = await getGithubUserData(contributor, github);
 
     await callEp("bounty/link", {
@@ -22,7 +25,7 @@ export async function linkBounty(
       platform: "github"
     });
 
-    await github.replyToCommand(issueNumber, Responses.BOUTNY_LINKED);
+    await github.replyToCommand(issueNumber, Responses.BOUNTY_LINKED);
   } catch (err) {
     console.error(chalk.red(`Error linking bounty. ${err}`));
 

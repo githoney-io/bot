@@ -2,7 +2,7 @@ import { Octokit } from "octokit";
 import { createNodeMiddleware } from "@octokit/webhooks";
 import EventSource from "eventsource";
 import { App } from "octokit";
-import { handleComment } from "./core";
+import { handleComment, handlePr } from "./core";
 import { callEp } from "./helpers";
 import { handlePRMerged, handleBountyClosed } from "./handlers";
 
@@ -189,6 +189,27 @@ export function startBot(params: BotParams) {
     };
 
     await handleBountyClosed(issueHandleObject);
+  });
+
+  app.webhooks.on("pull_request.opened", async ({ payload }) => {
+    if (!payload.installation) {
+      throw Error("no installation defined");
+    }
+
+    if (!payload.pull_request.body) return;
+
+    console.log(`PR opened for installation ${payload.installation.id}`);
+    let installation = await app.getInstallationOctokit(
+      payload.installation.id
+    );
+
+    let facade = new GithubFacade(
+      installation,
+      payload.repository.owner.login,
+      payload.repository.name
+    );
+
+    await handlePr(facade, payload.pull_request, payload.repository.owner.type);
   });
 
   app.webhooks.on("pull_request.closed", async ({ payload }) => {

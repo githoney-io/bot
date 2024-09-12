@@ -1,5 +1,5 @@
 import { GithubFacade } from "./adapters";
-import type { IssueComment, Issue } from "@octokit/webhooks-types";
+import type { IssueComment, Issue, PullRequest } from "@octokit/webhooks-types";
 import minimist from "minimist";
 import { acceptBounty, createBounty, sponsorBounty } from "./handlers";
 import { Responses } from "./responses";
@@ -13,15 +13,15 @@ import {
 } from "./interfaces/core.interface";
 import { linkBounty } from "./handlers/linkBounty";
 
-export async function handleComment(
+const getParsedData = async (
   github: GithubFacade,
-  issue: Issue,
-  comment: IssueComment,
+  comment: string,
+  issueNumber: number,
   owner: string
-) {
-  const commentBody = comment.body.trim();
+) => {
+  const commentBody = comment.trim();
 
-  if (!commentBody.startsWith("/githoney")) {
+  if (!commentBody.startsWith("/testhoney")) {
     console.debug("Skipping because not directed to bot");
     return;
   }
@@ -29,7 +29,7 @@ export async function handleComment(
   if (owner !== "Organization") {
     console.debug("Not an organization, ignoring.");
     return await github.replyToCommand(
-      issue.number,
+      issueNumber,
       Responses.USER_INSTALLATION_COMMENT
     );
   }
@@ -40,7 +40,17 @@ export async function handleComment(
     .filter((arg) => arg !== "");
   console.debug(args);
 
-  let parsed = minimist(args);
+  return minimist(args);
+};
+
+export async function handleComment(
+  github: GithubFacade,
+  issue: Issue,
+  comment: IssueComment,
+  owner: string
+) {
+  let parsed = await getParsedData(github, comment.body, issue.number, owner);
+  if (!parsed) return;
 
   if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
@@ -154,5 +164,42 @@ export async function handleComment(
       await github.rejectCommand(comment.id);
       await collectWrongCommand(parsed);
       break;
+  }
+}
+
+export async function handlePr(
+  github: GithubFacade,
+  pr: PullRequest,
+  owner: string
+) {
+  if (!pr.body) return;
+
+  const parsed = await getParsedData(github, pr.body, pr.number, owner);
+  if (!parsed) return;
+
+  if (parsed._.length === 0) {
+    console.warn("bad command syntax", parsed);
+    await github.replyToCommand(pr.number, Responses.UNKNOWN_COMMAND);
+    await collectWrongCommand(parsed);
+    return;
+  }
+
+  if (Object.keys(parsed).length === 1 && parsed._[0] === VALID_COMMANDS.LINK) {
+    console.warn("no args");
+    await collectWrongCommand(parsed);
+  }
+
+  if (parsed._[0] === VALID_COMMANDS.LINK) {
+    const linkParams: LinkBountyParams = {
+      bountyId: parsed.bountyId,
+      contributor: pr.user.login,
+      issueNumber: pr.number
+    };
+
+    await linkBounty(linkParams, github);
+  } else {
+    console.warn("unknown command", parsed);
+    await github.replyToCommand(pr.number, Responses.UNKNOWN_COMMAND);
+    await collectWrongCommand(parsed);
   }
 }

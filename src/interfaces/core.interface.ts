@@ -50,7 +50,7 @@ interface AcceptBountyParams {
 
 interface LinkBountyParams {
   issueNumber: number;
-  commentId: number;
+  commentId?: number;
   bountyId: number;
   contributor: string;
 }

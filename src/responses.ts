@@ -149,7 +149,7 @@ Example:
 
 *** 
 ### Link a Pull Request to a Bounty:
-\`link-bounty\`: The contributor links the current PR with the bounty. Can only be performed in a GitHub PR.
+\`link-bounty\`: The contributor links the current PR with the bounty. Can only be performed in the description of a new PR or in the comments of an existing PR.
 
 **Parameters:**
 
@@ -246,7 +246,7 @@ const BOUNTY_ACCEPTED = `
   If the PR is merged, you will not receive the reward.
 `;
 
-const BOUTNY_LINKED = `
+const BOUNTY_LINKED = `
   ### 🎉 Bounty linked! 🎉
 
   The bounty has been successfully linked to this PR. Just wait for the merge to claim your reward.
@@ -276,5 +276,5 @@ export const Responses = {
   BOUNTY_NOT_OPEN_TO_SPONSOR,
   BOUNTY_STILL_OPEN,
   BOUNTY_ACCEPTED,
-  BOUTNY_LINKED
+  BOUNTY_LINKED
 };
