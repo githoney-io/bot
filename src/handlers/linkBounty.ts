@@ -1,8 +1,9 @@
 import chalk from "chalk";
 import { GithubFacade } from "../adapters";
-import { callEp, commandErrorHandler, getGithubUserData } from "../helpers";
+import { callEp, commandErrorHandler } from "../helpers";
 import { Responses } from "../responses";
 import { LinkBountyParams } from "../interfaces/core.interface";
+import { getGithubUserData } from "../utils/githubQueries";
 
 // Calls to {BACKEND_URL}/bounty/link (POST)
 export async function linkBounty(
