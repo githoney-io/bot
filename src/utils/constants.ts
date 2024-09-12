@@ -13,12 +13,17 @@ export const BOT_CODES = {
   BOUNTY_TAKEN: "BountyTaken",
   BOUNTY_NOT_FOUND: "BountyNotFound",
   BOUNTY_EXPIRED: "BountyExpired",
-  NOT_OPEN_FOR_FUNDING: "NotOpenForFunding"
+  CLOSE_WRONG_FROM: "CloseWrongFrom",
+  BOUNTY_HASH_NOT_FOUND: "BountyHashNotFound",
+  NOT_OPEN_FOR_FUNDING: "NotOpenForFunding",
+  NO_SUBMISSIONS_FOUND: "NoSubmissionsFound",
+  BOUNTY_ALREADY_ACCEPTED: "BountyAlreadyAccepted"
 };
 
 export const HELP_COMMAND = "help";
 export const VALID_COMMANDS = {
   CREATE: "create-bounty",
   SPONSOR: "sponsor-bounty",
-  ACCEPT: "accept-bounty"
+  ACCEPT: "accept-bounty",
+  LINK: "link-bounty"
 };

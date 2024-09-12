@@ -148,6 +148,19 @@ Example:
 > /githoney accept-bounty --bountyId 123 --address addr1*
 
 *** 
+### Link a Pull Request to a Bounty:
+\`link-bounty\`: The contributor links the current PR with the bounty. Can only be performed in the description of a new PR or in the comments of an existing PR.
+
+**Parameters:**
+
+-  \`bountyId\`: The unique ID of the bounty.
+
+Example:
+> /githoney link-bounty --bountyId 123 
+
+(Meaning: Link the current PR with the bounty with ID 123)
+
+*** 
 ### Merge/Close Actions on GitHub
 
 Description:  To trigger bounty completion or cancellation, use GitHub's native "Merge Pull Request" or "Close Issue" buttons. The Githoney bot will automatically handle the corresponding actions based on your interaction.
@@ -179,7 +192,8 @@ const WRONG_COMMAND_USE = `
   Remember, you can only use the:
   - \`create-bounty\` command in open issues.
   - \`sponsor-bounty\` command in open issues.
-  - \`accept-bounty\` command in open PRs.
+  - \`accept-bounty\` command in open issues.
+  - \`link-bounty\` command in open pull requests.
 `;
 
 const CLOSE_WRONG_FROM = `
@@ -216,6 +230,28 @@ const BOUNTY_NOT_OPEN_TO_SPONSOR = `
   This bounty is not open to sponsor. It may have been closed or expired.
 `;
 
+const BOUNTY_STILL_OPEN = `
+  ### ⚠️ Hey! This bounty is still open ⚠️
+
+  You should go back to the corresponding issue and then link the PR again.
+
+  If the PR is merged, you will not receive the reward.
+`;
+
+const BOUNTY_ACCEPTED = `
+  ### ⚠️ Warning ⚠️
+
+  This bounty has already been accepted.
+
+  If the PR is merged, you will not receive the reward.
+`;
+
+const BOUNTY_LINKED = `
+  ### 🎉 Bounty linked! 🎉
+
+  The bounty has been successfully linked to this PR. Just wait for the merge to claim your reward.
+`;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -237,5 +273,8 @@ export const Responses = {
   CLOSE_WRONG_FROM,
   DEADLINE_REACHED,
   USER_INSTALLATION_COMMENT,
-  BOUNTY_NOT_OPEN_TO_SPONSOR
+  BOUNTY_NOT_OPEN_TO_SPONSOR,
+  BOUNTY_STILL_OPEN,
+  BOUNTY_ACCEPTED,
+  BOUNTY_LINKED
 };

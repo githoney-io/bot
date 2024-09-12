@@ -48,6 +48,13 @@ interface AcceptBountyParams {
   assignee: string;
 }
 
+interface LinkBountyParams {
+  issueNumber: number;
+  commentId?: number;
+  bountyId: number;
+  contributor: string;
+}
+
 interface ReclaimBountyParams {
   issueNumber: number;
   commentId: number;
@@ -67,6 +74,7 @@ export {
   CreateBountyParams,
   SponsorBountyParams,
   AcceptBountyParams,
+  LinkBountyParams,
   ReclaimBountyParams,
   BountyData,
   CloseHandler

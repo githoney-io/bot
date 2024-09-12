@@ -24,8 +24,7 @@ export async function acceptBounty(
       address,
       bountyId: bountyId,
       assignee: assigneeData,
-      platform: "github",
-      prNumber: issueNumber
+      platform: "github"
     });
     console.debug(bounty);
 
