@@ -17,7 +17,7 @@ export async function sponsorBounty(
 ) {
   try {
     const { sponsorInfo, commentId } = params;
-    const { sponsorUsername, address, organization, repository } = sponsorInfo;
+    const { sponsorUsername, organization, repository } = sponsorInfo;
 
     const tokens = sponsorInfo.tokens.map((t) => {
       const [name, amount] = t.split("=");
@@ -34,17 +34,12 @@ export async function sponsorBounty(
 
     await github.acknowledgeCommand(commentId);
     const sponsorData = await getGithubUserData(sponsorUsername, github);
-    const orgData = await getGithubOrgData(sponsorInfo.organization, github);
-    const repoData = await getGithubRepoData(
-      sponsorInfo.organization,
-      sponsorInfo.repository,
-      github
-    );
+    const orgData = await getGithubOrgData(organization, github);
+    const repoData = await getGithubRepoData(organization, repository, github);
 
     const {
       data: { bounty, sponsorId }
     } = await callEp("bounty/sponsor", {
-      address,
       tokens,
       issueNumber: sponsorInfo.issue,
       platform: "github",

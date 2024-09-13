@@ -20,7 +20,7 @@ export async function createBounty(
   try {
     const { bountyInfo, commentId } = params;
     const { creatorUsername, issueInfo, bountyData } = bountyInfo;
-    const { duration, address, network } = bountyData;
+    const { duration, network } = bountyData;
     const { labels, source, number: issueNumber } = issueInfo;
 
     const deadline_ut = duration * ONE_DAY_MS;
@@ -51,7 +51,6 @@ export async function createBounty(
     const {
       data: { bounty, fundingId }
     } = await callEp("bounty", {
-      address,
       tokens,
       title: issueInfo.title,
       description: issueInfo.description,
@@ -72,7 +71,6 @@ export async function createBounty(
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
-        address,
         amount: adaAmount,
         bountyId: bounty.id,
         deadline: Date.now() + deadline_ut,

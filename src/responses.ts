@@ -1,7 +1,6 @@
 interface ICreateBountySuccess {
   amount: number;
   deadline: number;
-  address: string;
   bountyId: number;
   signUrl: string;
   isTestnet?: boolean;
@@ -13,7 +12,6 @@ const CREATE_BOUNTY_SUCCESS = (params: ICreateBountySuccess) => `
 
   > 🍯 Reward: **${params.amount} ADA**
   > ⏰ Work deadline: **${new Date(params.deadline).toUTCString()}**
-  > 📍 Maintainer address: **${params.address.slice(0, 20)}..**
 
   The bounty id is \`${params.bountyId}\`
 
@@ -111,25 +109,23 @@ const HELP_COMMAND = `
   
 -  \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
 -  \`duration\`: Time limit for the bounty in days (must be at least 5 days).
--  \`address\`: The Cardano wallet address for the reward deposit.
 
 Example:
-> /githoney create-bounty --tokens ADA=200 --address addr1* --duration 14 
+> /githoney create-bounty --tokens ADA=200 --duration 14 
 
 (Meaning: Deposit 200 ADA with a 14-day duration)
 
  *** 
 ###  Add More Rewards to a Bounty
- \`sponsor-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
+\`sponsor-bounty\`: Add extra rewards to an existing bounty. Can only be performed in a GitHub issue with existing bounty. 
 
 **Parameters:**
 
 - \`tokens\`: List of tokens and amounts to add (currently only ADA is supported). Format: _tokenA=amountA&tokenB=amountB&...&tokenZ=amountZ_
-- \`address\`: The Cardano wallet address for the additional reward deposit.
 
 Example:
 
-> /githoney sponsor-bounty --tokens ADA=100 --address addr1*
+> /githoney sponsor-bounty --tokens ADA=100
 
 (Meaning: Add 100 ADA to the bounty)
 
@@ -140,8 +136,8 @@ Example:
 
 **Parameters**:
 
- - \`bountyId\`: The unique ID of the bounty.
- - \`address\`: The Cardano wallet address of the contributor.
+- \`bountyId\`: The unique ID of the bounty.
+- \`address\`: The Cardano wallet address of the contributor.
 
 Example:
 

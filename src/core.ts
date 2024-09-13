@@ -95,7 +95,6 @@ export async function handleComment(
           bountyData: {
             tokens: parsed.tokens?.split("&") || [],
             duration: parsed.duration,
-            address: parsed.address,
             network: NETWORK.PREPROD
           }
         },
@@ -116,7 +115,6 @@ export async function handleComment(
           sponsorUsername: comment.user.login,
           issue: issue.number,
           tokens: parsed.tokens?.split("&") || [],
-          address: parsed.address,
           organization: github.owner,
           repository: github.repo
         },

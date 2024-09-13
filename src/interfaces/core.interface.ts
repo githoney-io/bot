@@ -15,7 +15,6 @@ interface IssueInfo {
 interface BountyData {
   tokens: string[];
   duration: number;
-  address: string;
   network: NETWORK;
 }
 
@@ -33,7 +32,6 @@ interface SponsorBountyParams {
     sponsorUsername: string;
     issue: number;
     tokens: string[];
-    address: string;
     organization: string;
     repository: string;
   };
