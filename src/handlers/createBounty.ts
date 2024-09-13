@@ -81,6 +81,13 @@ export async function createBounty(
       })
     );
 
+    await github.octokit.rest.issues.addLabels({
+      owner: issueInfo.organization,
+      repo: issueInfo.repository,
+      issue_number: issueInfo.number,
+      labels: ["githoney-bounty"]
+    });
+
     callTwBot(
       adaAmount,
       issueInfo.organization,
