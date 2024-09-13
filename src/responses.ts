@@ -252,6 +252,14 @@ const BOUNTY_LINKED = `
   The bounty has been successfully linked to this PR. Just wait for the merge to claim your reward.
 `;
 
+const PULL_REQUEST_MERGED = `
+  ### 🎉 Pull Request Merged! 🎉
+
+  The pull request has been successfully merged and the bounty is now closed.
+
+  🍯 Congratulations to all involved 🍯
+  `;
+
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
@@ -276,5 +284,6 @@ export const Responses = {
   BOUNTY_NOT_OPEN_TO_SPONSOR,
   BOUNTY_STILL_OPEN,
   BOUNTY_ACCEPTED,
-  BOUNTY_LINKED
+  BOUNTY_LINKED,
+  PULL_REQUEST_MERGED
 };

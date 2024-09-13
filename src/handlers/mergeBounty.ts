@@ -32,6 +32,10 @@ export async function handlePRMerged({
       issueNumber,
       Responses.MERGE_BOUNTY_SUCCESS(signUrl, txLink)
     );
+    await github.replyToCommand(
+      bounty.issueNumber,
+      Responses.PULL_REQUEST_MERGED
+    );
   } catch (e) {
     console.error(chalk.red(`Error handling merge event. ${e}`));
 
