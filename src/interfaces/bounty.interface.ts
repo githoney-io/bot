@@ -18,6 +18,7 @@ interface IBounty {
   id: number;
   title: string;
   prNumber: number | null;
+  issueNumber: number;
   description: string | null;
   amount: number;
   issueLink: string;
