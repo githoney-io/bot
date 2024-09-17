@@ -176,6 +176,7 @@ export async function handlePr(
 
   const parsed = await getParsedData(github, pr.body, pr.number, owner);
   if (!parsed) return;
+  console.log(parsed);
 
   if (parsed._.length === 0) {
     console.warn("bad command syntax", parsed);
@@ -197,6 +198,10 @@ export async function handlePr(
     };
 
     await linkBounty(linkParams, github);
+  } else if (Object.values(VALID_COMMANDS).includes(parsed._[0])) {
+    console.warn("wrong command", parsed);
+    await github.replyToCommand(pr.number, Responses.WRONG_COMMAND_USE);
+    await collectWrongCommand(parsed);
   } else {
     console.warn("unknown command", parsed);
     await github.replyToCommand(pr.number, Responses.UNKNOWN_COMMAND);
