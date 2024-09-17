@@ -73,6 +73,10 @@ const CLOSE_BOUNTY_SUCCESS = (closeTxUrl: string, isPR: boolean) => {
   }
 };
 
+const CLOSE_BOUNTY_SUCCESS_WITHOUT_URL = `
+  ### 🎉 The bounty has been closed successfully! 🎉
+`;
+
 const PARAMETERS_WRONG = (errors: string) => `
   ### ⚠️ Warning ⚠️
 
@@ -263,6 +267,7 @@ const PULL_REQUEST_MERGED = `
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
   CLOSE_BOUNTY_SUCCESS,
+  CLOSE_BOUNTY_SUCCESS_WITHOUT_URL,
   UNKNOWN_COMMAND,
   BOUNTY_NOT_FOUND,
   WRONG_COMMAND_USE,

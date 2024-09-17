@@ -59,7 +59,9 @@ const isOtherClientError = (e: AxiosError) =>
   e.response?.status > StatusCodes.BAD_REQUEST &&
   e.response?.status < StatusCodes.INTERNAL_SERVER_ERROR;
 
-const txUrl = (txHash: string, network: string) => {
+const txUrl = (txHash: string | null, network: string) => {
+  if (!txHash) return null;
+
   if (network === "preprod") {
     return `https://preprod.cexplorer.io/tx/${txHash}`;
   } else {

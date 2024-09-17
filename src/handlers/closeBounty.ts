@@ -30,7 +30,9 @@ export async function handleBountyClosed({
     const txLink = txUrl(bounty.transactionHash, network.name);
     await github.replyToCommand(
       issueNumber,
-      Responses.CLOSE_BOUNTY_SUCCESS(txLink, bounty.prNumber ? true : false)
+      txLink
+        ? Responses.CLOSE_BOUNTY_SUCCESS(txLink, bounty.prNumber ? true : false)
+        : Responses.CLOSE_BOUNTY_SUCCESS_WITHOUT_URL
     );
   } catch (e) {
     console.error(chalk.red(`Error handling cancel event: ${e}`));
