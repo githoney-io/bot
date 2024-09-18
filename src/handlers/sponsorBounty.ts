@@ -42,7 +42,7 @@ export async function sponsorBounty(
     );
 
     const {
-      data: { bounty, sponsorId }
+      data: { bounty, fundingId }
     } = await callEp("bounty/sponsor", {
       address,
       tokens,
@@ -53,7 +53,7 @@ export async function sponsorBounty(
       repository: repoData
     });
 
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${sponsorId}`;
+    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/funding?fundingId=${fundingId}`;
     await github.replyToCommand(
       sponsorInfo.issue,
       Responses.SPONSOR_BOUNTY_SUCCESS(signUrl)
