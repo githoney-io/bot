@@ -30,7 +30,7 @@ export async function handlePRMerged({
     const txLink = txUrl(bounty.transactionHash, network.name);
     await github.replyToCommand(
       issueNumber,
-      Responses.MERGE_BOUNTY_SUCCESS(signUrl, txLink)
+      Responses.MERGE_BOUNTY_SUCCESS(signUrl, txLink!)
     );
     await github.replyToCommand(
       bounty.issueNumber,
