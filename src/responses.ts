@@ -1,3 +1,5 @@
+import appConfig from "./config/app-config";
+
 interface ICreateBountySuccess {
   amount: number;
   deadline: number;
@@ -49,26 +51,40 @@ const ACCEPT_BOUNTY_SUCCESS = (signUrl: string) => `
   You will be able to claim the reward once this PR gets merged.
 `;
 
-const MERGE_BOUNTY_SUCCESS = (reclaimUrl: string, mergeTxUrl: string) => `
+const MERGE_BOUNTY_SUCCESS = (
+  reclaimUrl: string,
+  mergeTxUrl: string,
+  bountyId: number
+) => `
   ### 🎉 The bounty has been merged! 🎉
 
   You can see the transaction [here](${mergeTxUrl}).
 
   Claim your reward [here](${reclaimUrl}).
+
+  Please, for any feedback or issues, contact us in the following [link](${appConfig.FRONTEND_URL}/feedback?bountyId=${bountyId}).
 `;
 
-const CLOSE_BOUNTY_SUCCESS = (closeTxUrl: string, isPR: boolean) => {
+const CLOSE_BOUNTY_SUCCESS = (
+  closeTxUrl: string,
+  isPR: boolean,
+  bountyId: number
+) => {
   if (isPR) {
     return `
   Sorry, your PR was not accepted. 😢
 
   See the transaction [here](${closeTxUrl}).
+
+  Please, for any feedback or issues, contact us in the following [link](${appConfig.FRONTEND_URL}/feedback?bountyId=${bountyId}).
 `;
   } else {
     return `
   ### 🎉 The bounty has been closed! 🎉
 
   You can see the transaction [here](${closeTxUrl}).
+
+  Please, for any feedback or issues, contact us in the following [link](${appConfig.FRONTEND_URL}/feedback?bountyId=${bountyId}).
 `;
   }
 };

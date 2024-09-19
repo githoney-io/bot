@@ -31,7 +31,11 @@ export async function handleBountyClosed({
     await github.replyToCommand(
       issueNumber,
       txLink
-        ? Responses.CLOSE_BOUNTY_SUCCESS(txLink, bounty.prNumber ? true : false)
+        ? Responses.CLOSE_BOUNTY_SUCCESS(
+            txLink,
+            bounty.prNumber ? true : false,
+            bounty.id
+          )
         : Responses.CLOSE_BOUNTY_SUCCESS_WITHOUT_URL
     );
   } catch (e) {
