@@ -89,11 +89,12 @@ export async function createBounty(
     });
 
     callTwBot(
+      issueInfo.title,
       adaAmount,
       issueInfo.organization,
       issueInfo.repository,
       issueInfo.number,
-      deadline_ut
+      duration * 24 * 60 * 60 * 1000
     );
   } catch (e) {
     console.error(chalk.red(`Error creating bounty. ${e}`));

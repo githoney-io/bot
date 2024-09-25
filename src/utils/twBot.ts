@@ -3,6 +3,7 @@ import { getRepoLink } from "../helpers";
 import axios from "axios";
 
 export const callTwBot = (
+  title: string,
   amount: number,
   organization: string,
   repository: string,
@@ -16,10 +17,10 @@ export const callTwBot = (
     .post(
       `${appConfig.TW_BOT_URL}/${twBotRoute}`,
       {
-        contractHash: "todo",
-        amount,
+        title,
         linkToIssue: getRepoLink(organization, repository, issue),
-        deadline: new Date(Date.now() + deadline).toISOString()
+        amount,
+        duration: deadline
       },
       { headers }
     )
