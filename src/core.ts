@@ -96,7 +96,7 @@ export async function handleComment(
             tokens: parsed.tokens?.split("&") || [],
             duration: parsed.duration,
             address: parsed.address,
-            network: NETWORK.PREPROD
+            network: parsed.network || NETWORK.MAINNET
           }
         },
         commentId: comment.id
