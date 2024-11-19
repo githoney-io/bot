@@ -42,10 +42,13 @@ const startServer = async () => {
     }
   });
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(figlet.textSync("GITHONEY BOT", { font: "Small Keyboard" }));
     console.log(`\nBot is running! 🤖\n`);
   });
+  server.setTimeout(300000);
+  server.keepAliveTimeout = 300000; // 5 minutes
+  server.headersTimeout = 305000; // Slightly more than keepAliveTimeout
 };
 
 startServer();
