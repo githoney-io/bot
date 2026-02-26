@@ -4,6 +4,7 @@ import appConfig from "./config/app-config";
 import fs from "fs";
 import figlet from "figlet";
 import { closeIssues } from "./endpoint/closeIssues";
+import { bugBountyConfirmed } from "./endpoint/bugBountyConfirmed";
 import { apiKeyMiddleware } from "./middlewares/apiKey.middleware";
 
 const PORT = appConfig.PORT;
@@ -22,6 +23,12 @@ const startServer = async () => {
     "/closeIssues",
     async (req, res, next) => apiKeyMiddleware(req, res, next),
     async (req, res) => closeIssues(req, res)
+  );
+
+  app.post(
+    "/bug-bounty-confirmed",
+    async (req, res, next) => apiKeyMiddleware(req, res, next),
+    async (req, res) => bugBountyConfirmed(req, res)
   );
 
   app.post("/webhooks", async (_req, _res) => {
