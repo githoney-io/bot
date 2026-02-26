@@ -51,6 +51,28 @@ const callEp = async (
     });
 };
 
+const getEp = async (
+  name: string,
+  params: Record<string, any>,
+  url: string = appConfig.BACKEND_URL,
+  headers: Record<string, any> = {
+    "x-api-key": appConfig.BACKEND_API_KEY,
+    "x-source": appConfig.SOURCE
+  }
+): Promise<any> => {
+  return axios
+    .get(`${url}/${name}`, { params, headers })
+    .then((response) => {
+      if (
+        response.status >= StatusCodes.OK &&
+        response.status < StatusCodes.MULTIPLE_CHOICES
+      ) {
+        return response.data;
+      }
+      throw response;
+    });
+};
+
 const isBadRequest = (e: AxiosError) =>
   e.response?.status && e.response?.status === StatusCodes.BAD_REQUEST;
 
@@ -120,6 +142,7 @@ export {
   getRepoLink,
   paramsValidationFail,
   callEp,
+  getEp,
   txUrl,
   isBadRequest,
   isOtherClientError

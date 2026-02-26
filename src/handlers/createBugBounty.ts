@@ -1,6 +1,6 @@
 import { GithubFacade } from "../adapters";
-import { callEp, commandErrorHandler } from "../helpers";
-import { CreateBountyParams } from "../interfaces/core.interface";
+import { callEp, getEp, commandErrorHandler } from "../helpers";
+import { CreateBugBountyParams } from "../interfaces/core.interface";
 import { NETWORK, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import appConfig from "../config/app-config";
@@ -11,16 +11,16 @@ import {
   getGithubUserData
 } from "../utils/githubQueries";
 
-// Calls to {BACKEND_URL}/bounty (POST)
-export async function createBounty(
-  params: CreateBountyParams,
+// Calls to {BACKEND_URL}/bounty (POST) with isBugReport=true
+export async function createBugBounty(
+  params: CreateBugBountyParams,
   github: GithubFacade
 ) {
   try {
     const { bountyInfo, commentId } = params;
     const { creatorUsername, issueInfo, bountyData } = bountyInfo;
     const { duration, address, network } = bountyData;
-    const { labels, source, number: issueNumber } = issueInfo;
+    const { number: issueNumber } = issueInfo;
 
     const deadline_ut = duration * ONE_DAY_MS;
 
@@ -31,14 +31,33 @@ export async function createBounty(
         : undefined;
     });
 
-    // TODO: remove this when the backend accepts other currencies
     if (tokens.some((t) => t === undefined)) {
       await github.rejectCommand(commentId);
       await github.replyToCommand(issueNumber, Responses.PLEASE_USE_ADA);
       return;
     }
 
+    // Look up the reporter address stored by /githoney report-bug
+    let bugReport: { reporterAddress: string } | undefined;
+    try {
+      const res = await getEp("bounty/bug-report", {
+        issue: issueNumber,
+        repo: issueInfo.repository,
+        org: issueInfo.organization
+      });
+      bugReport = res.data;
+    } catch {
+      // Not found or error
+    }
+
+    if (!bugReport?.reporterAddress) {
+      await github.rejectCommand(commentId);
+      await github.replyToCommand(issueNumber, Responses.CREATE_BUG_BOUNTY_NO_REPORT);
+      return;
+    }
+
     await github.acknowledgeCommand(commentId);
+
     const creatorData = await getGithubUserData(creatorUsername, github);
     const orgData = await getGithubOrgData(issueInfo.organization, github);
     const repoData = await getGithubRepoData(
@@ -59,15 +78,17 @@ export async function createBounty(
       organization: orgData,
       repository: repoData,
       network: network.toLowerCase(),
-      platform: source.toLowerCase(),
-      categories: labels,
+      platform: issueInfo.source.toLowerCase(),
+      categories: issueInfo.labels,
       issue: issueInfo.number,
-      issueUrl: issueInfo.issueUrl
+      issueUrl: issueInfo.issueUrl,
+      isBugReport: true,
+      reporterAddress: bugReport.reporterAddress
     });
-    console.debug(bounty);
 
     const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bounty.id}/create?fundingId=${fundingId}`;
     const adaAmount = tokens.find((t) => t!.name === "ADA")!.amount;
+
     await github.replyToCommand(
       issueNumber,
       Responses.CREATE_BOUNTY_SUCCESS({
@@ -86,18 +107,8 @@ export async function createBounty(
       issue_number: issueInfo.number,
       labels: ["githoney-bounty"]
     });
-
-    // callTwBot(
-    //   issueInfo.title,
-    //   adaAmount,
-    //   issueInfo.organization,
-    //   issueInfo.repository,
-    //   issueInfo.number,
-    //   duration * 24 * 60 * 60 * 1000
-    // );
   } catch (e) {
-    console.error(chalk.red(`Error creating bounty. ${e}`));
-
+    console.error(chalk.red(`Error creating bug bounty. ${e}`));
     await commandErrorHandler(
       e,
       params.bountyInfo.issueInfo.number,

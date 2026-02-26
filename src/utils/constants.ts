@@ -25,5 +25,7 @@ export const VALID_COMMANDS = {
   CREATE: "create-bounty",
   SPONSOR: "sponsor-bounty",
   ACCEPT: "accept-bounty",
-  LINK: "link-bounty"
+  LINK: "link-bounty",
+  REPORT_BUG: "report-bug",
+  CREATE_BUG_BOUNTY: "create-bug-bounty"
 };
