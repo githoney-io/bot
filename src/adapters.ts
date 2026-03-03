@@ -202,12 +202,19 @@ export function startBot(params: BotParams) {
       payload.repository.name
     );
 
-    await handleComment(
-      facade,
-      payload.issue,
-      payload.comment,
-      payload.repository.owner.type
-    );
+    try {
+      await handleComment(
+        facade,
+        payload.issue,
+        payload.comment,
+        payload.repository.owner.type
+      );
+    } catch (err) {
+      console.error(
+        `[issue_comment] handler failed installation=${payload.installation.id} issue=${payload.issue.number} repo=${payload.repository.full_name}`,
+        err
+      );
+    }
   };
 
   app.webhooks.on("issue_comment.created", async ({ payload }) =>

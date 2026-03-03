@@ -261,9 +261,9 @@ const BOUNTY_STILL_OPEN = `
 const BOUNTY_ACCEPTED = `
   ### ⚠️ Warning ⚠️
 
-  This bounty has already been accepted.
+  This bounty is assigned to a different contributor.
 
-  If the PR is merged, you will not receive the reward.
+  Only the assigned contributor can link this PR and claim the reward.
 `;
 
 const BOUNTY_LINKED = `
@@ -294,6 +294,19 @@ const CREATE_BUG_BOUNTY_NO_REPORT = `
   No bug report was found for this issue. Please have the reporter run \`/githoney report-bug --address addr1...\` first.
 `;
 
+const BUG_ALREADY_REPORTED = `
+  ### ⚠️ Bug already reported ⚠️
+
+  This issue already has a registered bug reporter. Re-reporting is not allowed.
+`;
+
+const ADDRESS_OWNED_BY_OTHER_USER = `
+  ### ⚠️ Address already in use ⚠️
+
+  That Cardano address is already linked to a different GitHub user in Githoney.
+  Please report the bug with your own contributor address.
+`;
+
 const BUG_BOUNTY_ASSIGN_LINK = ({ signUrl }: { signUrl: string }) => `
   ### ✅ Bug bounty create transaction confirmed!
 
@@ -302,6 +315,12 @@ const BUG_BOUNTY_ASSIGN_LINK = ({ signUrl }: { signUrl: string }) => `
   👉 [Sign Assign Transaction](${signUrl})
 
   Once signed, the reporter will be locked in as the contributor and can begin working on the fix.
+`;
+
+const BUG_BOUNTY_ASSIGN_CONFIRMED = ({ reporter }: { reporter: string }) => `
+  ### ✅ Assignment transaction confirmed!
+
+  @${reporter} you are now assigned as contributor for this bug bounty and can start working on the fix.
 `;
 
 const INVALID_CARDANO_ADDRESS = `
@@ -339,7 +358,10 @@ export const Responses = {
   BOUNTY_LINKED,
   PULL_REQUEST_MERGED,
   REPORT_BUG_SUCCESS,
+  BUG_ALREADY_REPORTED,
+  ADDRESS_OWNED_BY_OTHER_USER,
   INVALID_CARDANO_ADDRESS,
   CREATE_BUG_BOUNTY_NO_REPORT,
-  BUG_BOUNTY_ASSIGN_LINK
+  BUG_BOUNTY_ASSIGN_LINK,
+  BUG_BOUNTY_ASSIGN_CONFIRMED
 };

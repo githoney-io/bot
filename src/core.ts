@@ -122,6 +122,7 @@ export async function handleComment(
         sponsorInfo: {
           sponsorUsername: comment.user.login,
           issue: issue.number,
+          bountyId: parsed.bountyId,
           tokens: parsed.tokens?.split("&") || [],
           address: parsed.address,
           organization: github.owner,

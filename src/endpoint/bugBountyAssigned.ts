@@ -4,45 +4,23 @@ import appConfig from "../config/app-config";
 import fs from "fs";
 import { z } from "zod";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
-import { getEp } from "../helpers";
 import { Responses } from "../responses";
 
-const bugBountyConfirmedSchema = z.object({
+const bugBountyAssignedSchema = z.object({
   bountyId: z.number().int().positive(),
   issueNumber: z.number().int().positive(),
   repo: z.string().min(1),
-  org: z.string().min(1)
+  org: z.string().min(1),
+  reporter: z.string().min(1)
 });
 
-export const bugBountyConfirmed = async (req: Request, res: Response) => {
+export const bugBountyAssigned = async (req: Request, res: Response) => {
   try {
-    const { bountyId, issueNumber, repo, org } = bugBountyConfirmedSchema.parse(
+    const { issueNumber, repo, org, reporter } = bugBountyAssignedSchema.parse(
       req.body
     );
     const normalizedOrg = org.trim().toLowerCase();
 
-    // Fetch bounty to get maintainer address
-    const {
-      data: { bounty }
-    } = await getEp(`bounty/${bountyId}`, {});
-
-    const maintainerAddr: string | undefined = bounty?.fundingTransactions?.find(
-      (tx: any) => tx.isInitialDeposit
-    )?.wallet?.address;
-
-    if (!maintainerAddr) {
-      console.error(
-        `[bug-bounty-confirmed] maintainer address not found for bounty ${bountyId}`
-      );
-      res
-        .status(StatusCodes.UNPROCESSABLE_ENTITY)
-        .send({ msg: "Maintainer address not found" });
-      return;
-    }
-
-    const signUrl = `${appConfig.FRONTEND_URL}/bounty/sign/${bountyId}/assign?addr=${maintainerAddr}`;
-
-    // Post GitHub comment via App installation octokit
     const app = new App({
       appId: appConfig.GITHUB_APP_ID,
       privateKey: fs.readFileSync(appConfig.GITHUB_PRIVATE_KEY_PATH, "utf8")
@@ -63,17 +41,17 @@ export const bugBountyConfirmed = async (req: Request, res: Response) => {
         owner: org,
         repo,
         issue_number: issueNumber,
-        body: Responses.BUG_BOUNTY_ASSIGN_LINK({ signUrl })
+        body: Responses.BUG_BOUNTY_ASSIGN_CONFIRMED({ reporter })
       });
       console.log(
-        `[bug-bounty-confirmed] posted comment id=${comment.data.id} issue=${issueNumber} repo=${org}/${repo}`
+        `[bug-bounty-assigned] posted comment id=${comment.data.id} issue=${issueNumber} repo=${org}/${repo} reporter=${reporter}`
       );
       posted = true;
     });
 
     if (!posted) {
       console.error(
-        `[bug-bounty-confirmed] no matching installation/comment for org=${org} repo=${repo} issue=${issueNumber}`
+        `[bug-bounty-assigned] no matching installation/comment for org=${org} repo=${repo} issue=${issueNumber}`
       );
       res.status(StatusCodes.NOT_FOUND).send({
         msg: ReasonPhrases.NOT_FOUND,
@@ -84,7 +62,7 @@ export const bugBountyConfirmed = async (req: Request, res: Response) => {
 
     res.status(StatusCodes.OK).send({ msg: ReasonPhrases.OK });
   } catch (e) {
-    console.error("[bug-bounty-confirmed] error:", e);
+    console.error("[bug-bounty-assigned] error:", e);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send({ msg: ReasonPhrases.INTERNAL_SERVER_ERROR });

@@ -32,6 +32,7 @@ interface SponsorBountyParams {
   sponsorInfo: {
     sponsorUsername: string;
     issue: number;
+    bountyId?: number;
     tokens: string[];
     address: string;
     organization: string;

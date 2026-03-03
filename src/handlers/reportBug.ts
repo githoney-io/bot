@@ -10,6 +10,19 @@ function isValidCardanoAddress(addr: string): boolean {
   return CARDANO_ADDR_PREFIXES.some((p) => addr.startsWith(p)) && addr.length > 40;
 }
 
+const logOctokitHttpError = (context: string, e: any) => {
+  if (!e || typeof e !== "object") return;
+  const status = e.status ?? e.response?.status;
+  const method = e.request?.method;
+  const url = e.request?.url;
+  const message = e.response?.data?.message ?? e.message;
+  if (status || method || url) {
+    console.error(
+      `[${context}] GitHub HttpError status=${status ?? "n/a"} method=${method ?? "n/a"} url=${url ?? "n/a"} message=${message ?? "unknown"}`
+    );
+  }
+};
+
 // Calls to {BACKEND_URL}/bounty/bug-report (POST)
 export async function reportBug(params: ReportBugParams, github: GithubFacade) {
   const { issueNumber, commentId, reporterAddress, reporterGithubUser, org, repo } =
@@ -32,12 +45,17 @@ export async function reportBug(params: ReportBugParams, github: GithubFacade) {
       reporterGithubUser
     });
 
-    await github.octokit.rest.issues.addLabels({
-      owner: org,
-      repo,
-      issue_number: issueNumber,
-      labels: ["bug", "githoney-bug-bounty"]
-    });
+    try {
+      await github.octokit.rest.issues.addLabels({
+        owner: org,
+        repo,
+        issue_number: issueNumber,
+        labels: ["bug", "githoney-bug-bounty"]
+      });
+    } catch (err) {
+      logOctokitHttpError("report-bug:addLabels", err);
+      // Non-blocking: report already persisted.
+    }
 
     await github.replyToCommand(
       issueNumber,
@@ -45,6 +63,7 @@ export async function reportBug(params: ReportBugParams, github: GithubFacade) {
     );
   } catch (e) {
     console.error(chalk.red(`Error reporting bug. ${e}`));
+    logOctokitHttpError("report-bug", e);
     await commandErrorHandler(e, issueNumber, github, commentId);
   }
 }

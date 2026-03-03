@@ -11,6 +11,19 @@ import {
   getGithubUserData
 } from "../utils/githubQueries";
 
+const logOctokitHttpError = (context: string, e: any) => {
+  if (!e || typeof e !== "object") return;
+  const status = e.status ?? e.response?.status;
+  const method = e.request?.method;
+  const url = e.request?.url;
+  const message = e.response?.data?.message ?? e.message;
+  if (status || method || url) {
+    console.error(
+      `[${context}] GitHub HttpError status=${status ?? "n/a"} method=${method ?? "n/a"} url=${url ?? "n/a"} message=${message ?? "unknown"}`
+    );
+  }
+};
+
 // Calls to {BACKEND_URL}/bounty (POST) with isBugReport=true
 export async function createBugBounty(
   params: CreateBugBountyParams,
@@ -101,14 +114,20 @@ export async function createBugBounty(
       })
     );
 
-    await github.octokit.rest.issues.addLabels({
-      owner: issueInfo.organization,
-      repo: issueInfo.repository,
-      issue_number: issueInfo.number,
-      labels: ["githoney-bounty"]
-    });
+    try {
+      await github.octokit.rest.issues.addLabels({
+        owner: issueInfo.organization,
+        repo: issueInfo.repository,
+        issue_number: issueInfo.number,
+        labels: ["githoney-bounty"]
+      });
+    } catch (err) {
+      logOctokitHttpError("create-bug-bounty:addLabels", err);
+      // Non-blocking: bounty was created and user already got the sign link.
+    }
   } catch (e) {
     console.error(chalk.red(`Error creating bug bounty. ${e}`));
+    logOctokitHttpError("create-bug-bounty", e);
     await commandErrorHandler(
       e,
       params.bountyInfo.issueInfo.number,

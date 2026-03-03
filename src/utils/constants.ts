@@ -10,6 +10,8 @@ export const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const BOT_CODES = {
   BOUNTY_ALREADY_EXIST: "BountyAlreadyExist",
+  BUG_ALREADY_REPORTED: "BugAlreadyReported",
+  ADDRESS_OWNED_BY_OTHER_USER: "AddressOwnedByOtherUser",
   BOUNTY_TAKEN: "BountyTaken",
   BOUNTY_NOT_FOUND: "BountyNotFound",
   BOUNTY_EXPIRED: "BountyExpired",
