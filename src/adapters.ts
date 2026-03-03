@@ -71,6 +71,21 @@ export function startBot(params: BotParams) {
     }
   });
 
+  app.webhooks.onAny(({ name, payload }) => {
+    const action = (payload as { action?: string }).action;
+    const repo = (payload as { repository?: { full_name?: string } }).repository
+      ?.full_name;
+    console.log(
+      `[webhooks] received ${name}${action ? `.${action}` : ""}${
+        repo ? ` repo=${repo}` : ""
+      }`
+    );
+  });
+
+  app.webhooks.onError((error) => {
+    console.error("[webhooks] handler error", error);
+  });
+
   app.webhooks.on("installation", async ({ payload }) => {
     try {
       if (payload.action === "created") {
@@ -118,12 +133,39 @@ export function startBot(params: BotParams) {
 
   app.webhooks.on("installation_repositories.added", async ({ payload }) => {
     try {
+      if (payload.installation.account.type !== "Organization") {
+        return;
+      }
+
+      const installation = await app.getInstallationOctokit(
+        payload.installation.id
+      );
+
+      const { data } = await installation.rest.orgs.get({
+        org: payload.installation.account.login
+      });
+
       const repositories = payload.repositories_added.map((repo) => ({
         name: repo.name,
         url: `https://github.com/${repo.full_name}`
       }));
 
       console.log("Installation repositories event started");
+      await callEp("organization", {
+        name: data.name,
+        username: payload.installation.account.login,
+        avatarUri: payload.installation.account.avatar_url,
+        inPlatformId: payload.installation.account.id.toString(),
+        source: "github",
+        orgUrl: payload.installation.account.html_url,
+        description: data.description,
+        email: data.email,
+        twitterUsername: data.twitter_username,
+        location: data.location,
+        pageUrl: data.blog,
+        publicRepos: data.public_repos,
+        followers: data.followers
+      });
       await callEp("repository", {
         repositories,
         organizationName: payload.installation.account.login,
@@ -135,16 +177,21 @@ export function startBot(params: BotParams) {
     }
   });
 
-  app.webhooks.on("issue_comment.created", async ({ payload }) => {
+  const processIssueComment = async (payload: any) => {
     if (!payload.installation) {
       throw Error("no installation defined");
     }
 
     if (payload.sender.type !== "User") {
+      console.log(
+        `[issue_comment] ignored sender type=${payload.sender.type} issue=${payload.issue.number}`
+      );
       return;
     }
 
-    console.log(`Comment for installation ${payload.installation.id}`);
+    console.log(
+      `[issue_comment] processing installation=${payload.installation.id} issue=${payload.issue.number} repo=${payload.repository.full_name}`
+    );
     let installation = await app.getInstallationOctokit(
       payload.installation.id
     );
@@ -161,7 +208,15 @@ export function startBot(params: BotParams) {
       payload.comment,
       payload.repository.owner.type
     );
-  });
+  };
+
+  app.webhooks.on("issue_comment.created", async ({ payload }) =>
+    processIssueComment(payload)
+  );
+
+  app.webhooks.on("issue_comment.edited", async ({ payload }) =>
+    processIssueComment(payload)
+  );
 
   app.webhooks.on("issues.closed", async ({ payload }) => {
     if (!payload.installation) {
@@ -256,20 +311,42 @@ export function startBot(params: BotParams) {
 
   const source = new EventSource(params.webhookProxyUrl);
 
-  source.onmessage = (event) => {
-    const webhookEvent = JSON.parse(event.data);
+  source.onopen = () => {
+    console.log(`[webhooks] Connected to proxy: ${params.webhookProxyUrl}`);
+  };
 
-    app.webhooks
-      .verifyAndReceive({
-        id: webhookEvent["x-request-id"],
-        name: webhookEvent["x-github-event"],
-        signature: webhookEvent["x-hub-signature"],
-        payload: JSON.stringify(webhookEvent.body)
-      })
-      .catch(console.error);
+  source.onerror = (error) => {
+    console.error("[webhooks] Proxy connection error", error);
+  };
+
+  source.onmessage = (event) => {
+    try {
+      const webhookEvent = JSON.parse(event.data);
+      const signature =
+        webhookEvent["x-hub-signature-256"] ?? webhookEvent["x-hub-signature"];
+
+      if (!signature) {
+        console.warn("[webhooks] Missing webhook signature");
+        return;
+      }
+
+      app.webhooks
+        .verifyAndReceive({
+          id:
+            webhookEvent["x-request-id"] ?? webhookEvent["x-github-delivery"],
+          name: webhookEvent["x-github-event"],
+          signature,
+          payload: JSON.stringify(webhookEvent.body)
+        })
+        .catch((error) =>
+          console.error("[webhooks] verifyAndReceive failed", error)
+        );
+    } catch (error) {
+      console.error("[webhooks] Failed to parse proxied event", error);
+    }
   };
 
   return createNodeMiddleware(app.webhooks, {
-    path: "/webhook"
+    path: "/webhooks"
   });
 }

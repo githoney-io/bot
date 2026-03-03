@@ -23,13 +23,18 @@ const getParsedData = async (
 ) => {
   const commentBody = comment.trim();
 
-  if (!commentBody.startsWith("/githoney")) {
-    console.debug("Skipping because not directed to bot");
+  if (!commentBody.toLowerCase().startsWith("/githoney")) {
+    console.debug(
+      `Skipping because not directed to bot. issue=${issueNumber} comment="${commentBody.slice(
+        0,
+        80
+      )}"`
+    );
     return;
   }
 
   if (owner !== "Organization") {
-    console.debug("Not an organization, ignoring.");
+    console.debug(`Not an organization (owner=${owner}), ignoring.`);
     return await github.replyToCommand(
       issueNumber,
       Responses.USER_INSTALLATION_COMMENT
