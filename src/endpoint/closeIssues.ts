@@ -61,22 +61,24 @@ export const closeIssues = async (req: Request, res: Response) => {
           (i) => i.owner === installation.account!.login
         );
 
-        issues.forEach(async ({ owner, repo, issue_number }) => {
-          // Close issues
-          await closeAndComment(octokitInstallation, {
-            owner,
-            repo,
-            issue_number: issue_number[0]!
-          });
-
-          // Close PRs if there are any
-          if (issue_number[1])
+        await Promise.all(
+          issues.map(async ({ owner, repo, issue_number }) => {
+            // Close issues
             await closeAndComment(octokitInstallation, {
               owner,
               repo,
-              issue_number: issue_number[1]
+              issue_number: issue_number[0]!
             });
-        });
+
+            // Close PRs if there are any
+            if (issue_number[1])
+              await closeAndComment(octokitInstallation, {
+                owner,
+                repo,
+                issue_number: issue_number[1]
+              });
+          })
+        );
       }
     });
 
