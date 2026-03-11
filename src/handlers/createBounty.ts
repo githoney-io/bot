@@ -3,6 +3,7 @@ import { callEp, commandErrorHandler } from "../helpers";
 import { CreateBountyParams } from "../interfaces/core.interface";
 import { NETWORK, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
+import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
 import { Responses } from "../responses";
 import {
@@ -87,14 +88,14 @@ export async function createBounty(
       labels: ["githoney-bounty"]
     });
 
-    // callTwBot(
-    //   issueInfo.title,
-    //   adaAmount,
-    //   issueInfo.organization,
-    //   issueInfo.repository,
-    //   issueInfo.number,
-    //   duration * 24 * 60 * 60 * 1000
-    // );
+    callTwBot(
+      issueInfo.title,
+      adaAmount,
+      issueInfo.organization,
+      issueInfo.repository,
+      issueInfo.number,
+      duration * 24 * 60 * 60 * 1000
+    );
   } catch (e) {
     console.error(chalk.red(`Error creating bounty. ${e}`));
 
