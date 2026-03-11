@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "probe:backend": "tsx scripts/probe-backend-flow.ts",
+    "db:bootstrap": "bash scripts/bootstrap-backend-db.sh"
   },
   "keywords": [],
   "author": "",

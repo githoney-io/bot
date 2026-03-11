@@ -221,10 +221,6 @@ export function startBot(params: BotParams) {
     processIssueComment(payload)
   );
 
-  app.webhooks.on("issue_comment.edited", async ({ payload }) =>
-    processIssueComment(payload)
-  );
-
   app.webhooks.on("issues.closed", async ({ payload }) => {
     if (!payload.installation) {
       throw Error("no installation defined");
