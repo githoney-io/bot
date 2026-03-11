@@ -51,6 +51,28 @@ const callEp = async (
     });
 };
 
+const getEp = async (
+  name: string,
+  params: Record<string, any>,
+  url: string = appConfig.BACKEND_URL,
+  headers: Record<string, any> = {
+    "x-api-key": appConfig.BACKEND_API_KEY,
+    "x-source": appConfig.SOURCE
+  }
+): Promise<any> => {
+  return axios
+    .get(`${url}/${name}`, { params, headers })
+    .then((response) => {
+      if (
+        response.status >= StatusCodes.OK &&
+        response.status < StatusCodes.MULTIPLE_CHOICES
+      ) {
+        return response.data;
+      }
+      throw response;
+    });
+};
+
 const isBadRequest = (e: AxiosError) =>
   e.response?.status && e.response?.status === StatusCodes.BAD_REQUEST;
 
@@ -70,6 +92,8 @@ const txUrl = (txHash: string | null, network: string) => {
 };
 const BOT_ERROR_RESPONSES: { [key: string]: string } = {
   BountyAlreadyExist: Responses.ALREADY_EXISTING_BOUNTY,
+  BugAlreadyReported: Responses.BUG_ALREADY_REPORTED,
+  AddressOwnedByOtherUser: Responses.ADDRESS_OWNED_BY_OTHER_USER,
   BountyTaken: Responses.ALREADY_ASSIGNED_BOUNTY,
   BountyNotFound: Responses.BOUNTY_NOT_FOUND,
   BountyHashNotFound: Responses.BOUNTY_HASH_NOT_FOUND,
@@ -86,33 +110,43 @@ export const commandErrorHandler = async (
   commentId?: number,
   isPrAction: boolean = false
 ) => {
-  if (e instanceof AxiosError) {
-    if (isBadRequest(e) && commentId) {
-      // If the error is a 400, it means that the validation failed
-      await paramsValidationFail(
-        github,
-        issueNumber,
-        commentId,
-        e.response?.data.error
-      );
-    } else if (
-      isPrAction &&
-      !BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
-    ) {
-      return;
-    } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
-      await github.replyToCommand(
-        issueNumber,
-        BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
-      );
-    } else if (isOtherClientError(e)) {
-      await github.replyToCommand(
-        issueNumber,
-        Responses.BACKEND_ERROR(e.response?.data.error)
-      );
+  try {
+    if (e instanceof AxiosError) {
+      if (isBadRequest(e) && commentId) {
+        // If the error is a 400, it means that the validation failed
+        await paramsValidationFail(
+          github,
+          issueNumber,
+          commentId,
+          e.response?.data.error
+        );
+      } else if (
+        isPrAction &&
+        !BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
+      ) {
+        return;
+      } else if (BOT_ERROR_RESPONSES[e.response?.data.botCode as string]) {
+        await github.replyToCommand(
+          issueNumber,
+          BOT_ERROR_RESPONSES[e.response?.data.botCode as string]
+        );
+      } else if (isOtherClientError(e)) {
+        await github.replyToCommand(
+          issueNumber,
+          Responses.BACKEND_ERROR(e.response?.data.error)
+        );
+      }
+    } else {
+      await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
     }
-  } else {
-    await github.replyToCommand(issueNumber, Responses.INTERNAL_SERVER_ERROR);
+  } catch (handlerErr: any) {
+    const status = handlerErr?.status ?? handlerErr?.response?.status;
+    const method = handlerErr?.request?.method ?? "unknown";
+    const url = handlerErr?.request?.url ?? "unknown";
+    console.error(
+      `[commandErrorHandler] failed to post fallback message status=${status ?? "n/a"} ${method} ${url}`,
+      handlerErr
+    );
   }
 };
 
@@ -120,6 +154,7 @@ export {
   getRepoLink,
   paramsValidationFail,
   callEp,
+  getEp,
   txUrl,
   isBadRequest,
   isOtherClientError

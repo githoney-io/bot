@@ -32,6 +32,7 @@ interface SponsorBountyParams {
   sponsorInfo: {
     sponsorUsername: string;
     issue: number;
+    bountyId?: number;
     tokens: string[];
     address: string;
     organization: string;
@@ -62,6 +63,24 @@ interface ReclaimBountyParams {
   address: string;
 }
 
+interface ReportBugParams {
+  issueNumber: number;
+  commentId: number;
+  reporterAddress: string;
+  reporterGithubUser: string;
+  org: string;
+  repo: string;
+}
+
+interface CreateBugBountyParams {
+  bountyInfo: {
+    creatorUsername: string;
+    issueInfo: IssueInfo;
+    bountyData: BountyData;
+  };
+  commentId: number;
+}
+
 interface CloseHandler {
   from: string;
   facade: GithubFacade;
@@ -76,6 +95,8 @@ export {
   AcceptBountyParams,
   LinkBountyParams,
   ReclaimBountyParams,
+  ReportBugParams,
+  CreateBugBountyParams,
   BountyData,
   CloseHandler
 };

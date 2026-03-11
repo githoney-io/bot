@@ -261,9 +261,9 @@ const BOUNTY_STILL_OPEN = `
 const BOUNTY_ACCEPTED = `
   ### ⚠️ Warning ⚠️
 
-  This bounty has already been accepted.
+  This bounty is assigned to a different contributor.
 
-  If the PR is merged, you will not receive the reward.
+  Only the assigned contributor can link this PR and claim the reward.
 `;
 
 const BOUNTY_LINKED = `
@@ -279,6 +279,56 @@ const PULL_REQUEST_MERGED = `
 
   🍯 Congratulations to all involved 🍯
   `;
+
+const REPORT_BUG_SUCCESS = ({ reporter }: { reporter: string }) => `
+  ### 🐛 Bug reported! 🐛
+
+  @${reporter} has been registered as the reporter/contributor for this issue.
+
+  A maintainer can now run \`/githoney create-bug-bounty\` to fund a bounty and pre-assign it.
+`;
+
+const CREATE_BUG_BOUNTY_NO_REPORT = `
+  ### ⚠️ No bug report found ⚠️
+
+  No bug report was found for this issue. Please have the reporter run \`/githoney report-bug --address addr1...\` first.
+`;
+
+const BUG_ALREADY_REPORTED = `
+  ### ⚠️ Bug already reported ⚠️
+
+  This issue already has a registered bug reporter. Re-reporting is not allowed.
+`;
+
+const ADDRESS_OWNED_BY_OTHER_USER = `
+  ### ⚠️ Address already in use ⚠️
+
+  That Cardano address is already linked to a different GitHub user in Githoney.
+  Please report the bug with your own contributor address.
+`;
+
+const BUG_BOUNTY_ASSIGN_LINK = ({ signUrl }: { signUrl: string }) => `
+  ### ✅ Bug bounty create transaction confirmed!
+
+  The next step is to assign the reporter as contributor. Sign the assignment transaction with your wallet:
+
+  👉 [Sign Assign Transaction](${signUrl})
+
+  Once signed, the reporter will be locked in as the contributor and can begin working on the fix.
+`;
+
+const BUG_BOUNTY_ASSIGN_CONFIRMED = ({ reporter }: { reporter: string }) => `
+  ### ✅ Assignment transaction confirmed!
+
+  @${reporter} you are now assigned as contributor for this bug bounty and can start working on the fix.
+`;
+
+const INVALID_CARDANO_ADDRESS = `
+  ### ⚠️ Invalid Cardano address ⚠️
+
+  The address provided does not look like a valid Cardano address.
+  Please provide a valid bech32 address starting with \`addr1\` (mainnet) or \`addr_test1\` (preprod).
+`;
 
 export const Responses = {
   ALREADY_EXISTING_BOUNTY,
@@ -306,5 +356,12 @@ export const Responses = {
   BOUNTY_STILL_OPEN,
   BOUNTY_ACCEPTED,
   BOUNTY_LINKED,
-  PULL_REQUEST_MERGED
+  PULL_REQUEST_MERGED,
+  REPORT_BUG_SUCCESS,
+  BUG_ALREADY_REPORTED,
+  ADDRESS_OWNED_BY_OTHER_USER,
+  INVALID_CARDANO_ADDRESS,
+  CREATE_BUG_BOUNTY_NO_REPORT,
+  BUG_BOUNTY_ASSIGN_LINK,
+  BUG_BOUNTY_ASSIGN_CONFIRMED
 };

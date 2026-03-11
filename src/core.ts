@@ -1,14 +1,16 @@
 import { GithubFacade } from "./adapters";
 import type { IssueComment, Issue, PullRequest } from "@octokit/webhooks-types";
 import minimist from "minimist";
-import { acceptBounty, createBounty, sponsorBounty } from "./handlers";
+import { acceptBounty, createBounty, createBugBounty, sponsorBounty, reportBug } from "./handlers";
 import { Responses } from "./responses";
 import { collectWrongCommand } from "./handlers/wrongCommand";
 import { HELP_COMMAND, NETWORK, VALID_COMMANDS } from "./utils/constants";
 import {
   AcceptBountyParams,
   CreateBountyParams,
+  CreateBugBountyParams,
   LinkBountyParams,
+  ReportBugParams,
   SponsorBountyParams
 } from "./interfaces/core.interface";
 import { linkBounty } from "./handlers/linkBounty";
@@ -21,13 +23,18 @@ const getParsedData = async (
 ) => {
   const commentBody = comment.trim();
 
-  if (!commentBody.startsWith("/githoney")) {
-    console.debug("Skipping because not directed to bot");
+  if (!commentBody.toLowerCase().startsWith("/githoney")) {
+    console.debug(
+      `Skipping because not directed to bot. issue=${issueNumber} comment="${commentBody.slice(
+        0,
+        80
+      )}"`
+    );
     return;
   }
 
   if (owner !== "Organization") {
-    console.debug("Not an organization, ignoring.");
+    console.debug(`Not an organization (owner=${owner}), ignoring.`);
     return await github.replyToCommand(
       issueNumber,
       Responses.USER_INSTALLATION_COMMENT
@@ -115,6 +122,7 @@ export async function handleComment(
         sponsorInfo: {
           sponsorUsername: comment.user.login,
           issue: issue.number,
+          bountyId: parsed.bountyId,
           tokens: parsed.tokens?.split("&") || [],
           address: parsed.address,
           organization: github.owner,
@@ -141,6 +149,56 @@ export async function handleComment(
       };
 
       await acceptBounty(acceptParams, github);
+      break;
+    case VALID_COMMANDS.REPORT_BUG:
+      if ("pull_request" in issue || issue.state === "closed")
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
+      const reportBugParams: ReportBugParams = {
+        issueNumber: issue.number,
+        commentId: comment.id,
+        reporterAddress: parsed.address,
+        reporterGithubUser: comment.user.login,
+        org: github.owner,
+        repo: github.repo
+      };
+
+      await reportBug(reportBugParams, github);
+      break;
+    case VALID_COMMANDS.CREATE_BUG_BOUNTY:
+      if ("pull_request" in issue || issue.state === "closed")
+        return await github.replyToCommand(
+          issue.number,
+          Responses.WRONG_COMMAND_USE
+        );
+
+      const createBugBountyParams: CreateBugBountyParams = {
+        bountyInfo: {
+          creatorUsername: comment.user.login,
+          issueInfo: {
+            number: issue.number,
+            title: issue.title,
+            description: issue.body || "",
+            source: "GitHub",
+            organization: github.owner,
+            repository: github.repo,
+            issueUrl: issue.html_url,
+            labels: []
+          },
+          bountyData: {
+            tokens: parsed.tokens?.split("&") || [],
+            duration: parsed.duration,
+            address: parsed.address,
+            network: parsed.network || NETWORK.MAINNET
+          }
+        },
+        commentId: comment.id
+      };
+
+      await createBugBounty(createBugBountyParams, github);
       break;
     case VALID_COMMANDS.LINK:
       if (!("pull_request" in issue) || issue.state === "closed")

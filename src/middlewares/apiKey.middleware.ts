@@ -12,7 +12,17 @@ export const apiKeyMiddleware = async (
 
     if (typeof apiKey !== "string") throw new Error();
 
-    if (apiKey && apiKey === appConfig.API_KEY) {
+    const incoming = apiKey.trim();
+    const acceptedKeys = [
+      appConfig.API_KEY,
+      appConfig.TW_SECRET_KEY,
+      process.env.BOT_KEY // fallback for local setups that export BOT_KEY in bot process
+    ]
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.trim())
+      .filter((value, index, arr) => value.length > 0 && arr.indexOf(value) === index);
+
+    if (acceptedKeys.includes(incoming)) {
       return next();
     } else {
       throw new Error();

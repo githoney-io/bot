@@ -4,6 +4,8 @@ import appConfig from "./config/app-config";
 import fs from "fs";
 import figlet from "figlet";
 import { closeIssues } from "./endpoint/closeIssues";
+import { bugBountyConfirmed } from "./endpoint/bugBountyConfirmed";
+import { bugBountyAssigned } from "./endpoint/bugBountyAssigned";
 import { apiKeyMiddleware } from "./middlewares/apiKey.middleware";
 
 const PORT = appConfig.PORT;
@@ -24,23 +26,20 @@ const startServer = async () => {
     async (req, res) => closeIssues(req, res)
   );
 
-  app.post("/webhooks", async (_req, _res) => {
-    try {
-      _res.header("Access-Control-Allow-Origin", "*");
-      const res = await webhooks(_req, _res);
-      _res.send(res);
-    } catch (e: any) {
-      e = String(e);
-      let res = { error: e };
-      if (e.includes("TranslationLogicMissingInput")) {
-        res = {
-          error: "Input missing. Please wait a few seconds and try again."
-        };
-      }
-      console.log(res);
-      _res.status(500).send(res);
-    }
-  });
+  app.post(
+    "/bug-bounty-confirmed",
+    async (req, res, next) => apiKeyMiddleware(req, res, next),
+    async (req, res) => bugBountyConfirmed(req, res)
+  );
+
+  app.post(
+    "/bug-bounty-assigned",
+    async (req, res, next) => apiKeyMiddleware(req, res, next),
+    async (req, res) => bugBountyAssigned(req, res)
+  );
+
+  // Octokit middleware handles /webhooks requests directly.
+  app.use(webhooks);
 
   const server = app.listen(PORT, () => {
     console.log(figlet.textSync("GITHONEY BOT", { font: "Small Keyboard" }));

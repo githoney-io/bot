@@ -46,6 +46,7 @@ export async function sponsorBounty(
     } = await callEp("bounty/sponsor", {
       address,
       tokens,
+      bountyId: sponsorInfo.bountyId,
       issueNumber: sponsorInfo.issue,
       platform: "github",
       sponsor: sponsorData,
