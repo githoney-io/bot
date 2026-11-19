@@ -88,7 +88,9 @@ let baseUrl: string;
 
 before(async () => {
   for (const [k, v] of Object.entries(env)) process.env[k] = v;
-  delete process.env.WEBHOOK_PROXY_URL;
+  // Set it empty rather than deleting it, so dotenv cannot refill it from a
+  // developer's .env; the config reads an empty value as unset.
+  process.env.WEBHOOK_PROXY_URL = "";
   globalThis.fetch = fakeFetch;
   const { startServer } = await import("../src/server");
   server = startServer(0);
@@ -102,7 +104,7 @@ after(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-const deliver = (signature: string) =>
+const deliver = (signature: string, body = payload) =>
   realFetch(`${baseUrl}/webhooks`, {
     method: "POST",
     headers: {
@@ -111,7 +113,7 @@ const deliver = (signature: string) =>
       "x-github-delivery": "00000000-0000-0000-0000-000000000001",
       "x-hub-signature-256": signature
     },
-    body: payload
+    body
   });
 
 test("a signed delivery to /webhooks reaches the comment handler", async () => {
@@ -133,6 +135,14 @@ test("a delivery with a wrong signature is rejected before any handler", async (
   githubCalls.length = 0;
   const res = await deliver(sign(payload, "not-the-webhook-secret"));
   assert.ok(res.status >= 400 && res.status < 500, `status ${res.status}`);
+  assert.deepEqual(githubCalls, []);
+});
+
+test("a delivery over GitHub's 25 MB cap is refused before any handler", async () => {
+  githubCalls.length = 0;
+  const big = JSON.stringify({ padding: "x".repeat(25 * 1024 * 1024) });
+  const res = await deliver(sign(big, SECRET), big);
+  assert.equal(res.status, 413);
   assert.deepEqual(githubCalls, []);
 });
 
