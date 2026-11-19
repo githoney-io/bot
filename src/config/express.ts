@@ -10,13 +10,27 @@ import cors from "cors";
 // The subscribed events carry text fields capped at 65,536 characters (issue,
 // pull request and comment bodies) and, on installation events, the list of
 // repositories; 5 MB covers both with room to spare. A request declaring a
-// larger body is refused with 413 unread; a chunked one is read up to the cap.
+// larger body gets 413 before any slot is taken; a chunked one is read up to
+// the cap.
 export const WEBHOOK_BODY_LIMIT = 5 * 1024 * 1024;
 
 // Bodies read at once on POST /webhooks; further requests get 503 unread.
-// A read holds about three times its size while buffered, so this keeps the
-// route's memory well below the pod's limit.
+// A read holds about three times its size while buffered, so the route holds
+// about 120 MiB at most, on top of the npm, tsx and bot processes at rest.
 export const WEBHOOK_MAX_INFLIGHT = 8;
+
+// Refuse a declared body over `limit` without taking a slot: answer 413 and
+// discard the body as it arrives, so the client can read the answer.
+const refuseOversized = (limit: number): RequestHandler => {
+  return (req: Request, res: Response, next) => {
+    if (Number(req.headers["content-length"]) > limit) {
+      req.resume();
+      res.status(413).json({ error: "Payload too large" });
+      return;
+    }
+    next();
+  };
+};
 
 // Hold one of the route's read slots until the body is consumed or the
 // request ends, whichever comes first.
@@ -62,6 +76,7 @@ const createServer = (webhooks: RequestHandler) => {
   app.use(morgan("dev"));
   app.post(
     "/webhooks",
+    refuseOversized(WEBHOOK_BODY_LIMIT),
     limitInflight(WEBHOOK_MAX_INFLIGHT),
     express.text({
       type: () => true,

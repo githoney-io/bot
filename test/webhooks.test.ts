@@ -8,7 +8,12 @@ import { AddressInfo, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ClientRequest, Server } from "node:http";
+import type {
+  ClientRequest,
+  IncomingMessage,
+  Server,
+  ServerResponse
+} from "node:http";
 import { gzipSync } from "node:zlib";
 import {
   WEBHOOK_BODY_LIMIT,
@@ -166,9 +171,25 @@ test("a delivery with a wrong signature is rejected before any handler", async (
   assert.deepEqual(githubCalls, []);
 });
 
-test("a signed delivery just under the body limit reaches the handler", async () => {
+// Installation events list every repository, so deliveries of a few MB are
+// real; the route must accept up to 5 MB whatever the constant says.
+const REQUIRED_BODY_SIZE = 5 * 1024 * 1024;
+
+// Buffered bodies hold about three times their size. The chart limits the pod
+// to 512Mi and the image's npm, tsx and bot processes take about 210 MiB at
+// rest, so reads in flight must stay within 128 MiB.
+const READ_BUDGET = 128 * 1024 * 1024;
+
+test("the concurrent read limit keeps buffered bodies within the memory budget", () => {
+  assert.ok(
+    WEBHOOK_MAX_INFLIGHT * WEBHOOK_BODY_LIMIT * 3 <= READ_BUDGET,
+    `${WEBHOOK_MAX_INFLIGHT} reads of ${WEBHOOK_BODY_LIMIT} bytes exceed the budget`
+  );
+});
+
+test("a signed delivery just under 5 MB reaches the handler", async () => {
   githubCalls.length = 0;
-  const body = padded(WEBHOOK_BODY_LIMIT - 4096);
+  const body = padded(REQUIRED_BODY_SIZE - 4096);
   const res = await deliver(sign(body, SECRET), body);
   assert.equal(res.status, 200);
   assert.ok(replyPosted(), `no reply; GitHub calls: ${githubCalls.length}`);
@@ -180,6 +201,33 @@ test("a signed delivery over the body limit is refused before any handler", asyn
   const res = await deliver(sign(body, SECRET), body);
   assert.equal(res.status, 413);
   assert.deepEqual(githubCalls, []);
+});
+
+test("a declared oversized body is refused before it is read", async () => {
+  const url = new URL(`${baseUrl}/webhooks`);
+  const status = await new Promise<number>((resolve, reject) => {
+    const req = httpRequest({
+      host: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      method: "POST",
+      agent: false,
+      headers: {
+        ...deliveryHeaders(sign(payload, SECRET)),
+        "content-length": String(1024 * 1024 * 1024)
+      }
+    });
+    const timer = setTimeout(() => reject(new Error("no response")), 5000);
+    req.on("response", (res) => {
+      clearTimeout(timer);
+      res.resume();
+      resolve(res.statusCode ?? 0);
+      req.destroy();
+    });
+    req.on("error", () => {});
+    req.write(payload);
+  });
+  assert.equal(status, 413);
 });
 
 test("a gzip-encoded delivery is refused unread", async () => {
@@ -203,17 +251,20 @@ test("a body-parser error is answered as JSON without a stack trace", async () =
 });
 
 test("deliveries past the concurrent read limit get 503 until a slot frees", async () => {
-  // Hold every read slot with requests whose bodies never finish.
+  // Hold every read slot with requests whose bodies never finish. The
+  // server's responses to them show whether each one was admitted.
+  const held: ServerResponse[] = [];
   const accepted = new Promise<void>((resolve) => {
-    let seen = 0;
-    const onRequest = () => {
-      if (++seen === WEBHOOK_MAX_INFLIGHT) {
+    const onRequest = (_req: IncomingMessage, res: ServerResponse) => {
+      held.push(res);
+      if (held.length === WEBHOOK_MAX_INFLIGHT) {
         server.off("request", onRequest);
         setImmediate(resolve);
       }
     };
     server.on("request", onRequest);
   });
+  let heldResponses = 0;
   const url = new URL(`${baseUrl}/webhooks`);
   const pending: ClientRequest[] = [];
   for (let i = 0; i < WEBHOOK_MAX_INFLIGHT; i++) {
@@ -229,6 +280,10 @@ test("deliveries past the concurrent read limit get 503 until a slot frees", asy
       }
     });
     req.on("error", () => {});
+    req.on("response", (res) => {
+      heldResponses++;
+      res.resume();
+    });
     req.write(payload.slice(0, 10));
     pending.push(req);
   }
@@ -238,6 +293,15 @@ test("deliveries past the concurrent read limit get 503 until a slot frees", asy
     const refused = await deliver(sign(payload, SECRET));
     assert.equal(refused.status, 503);
     assert.deepEqual(githubCalls, []);
+    // Every held upload was admitted: none was answered, so all of them are
+    // still being read when the next delivery is refused.
+    const answered = held.filter((res) => res.headersSent).length;
+    assert.equal(answered, 0, `${answered} held uploads were answered`);
+    assert.equal(
+      heldResponses,
+      0,
+      `${heldResponses} held uploads got a response`
+    );
   } finally {
     for (const req of pending) req.destroy();
   }
