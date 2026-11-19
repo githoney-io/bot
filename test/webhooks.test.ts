@@ -232,14 +232,16 @@ test("deliveries past the concurrent read limit get 503 until a slot frees", asy
     req.write(payload.slice(0, 10));
     pending.push(req);
   }
-  await accepted;
+  try {
+    await accepted;
+    githubCalls.length = 0;
+    const refused = await deliver(sign(payload, SECRET));
+    assert.equal(refused.status, 503);
+    assert.deepEqual(githubCalls, []);
+  } finally {
+    for (const req of pending) req.destroy();
+  }
 
-  githubCalls.length = 0;
-  const refused = await deliver(sign(payload, SECRET));
-  assert.equal(refused.status, 503);
-  assert.deepEqual(githubCalls, []);
-
-  for (const req of pending) req.destroy();
   let res = await deliver(sign(payload, SECRET));
   for (let i = 0; i < 50 && res.status === 503; i++) {
     await new Promise((r) => setTimeout(r, 20));
