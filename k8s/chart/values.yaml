@@ -67,6 +67,22 @@ service:
   port: 3001
   annotations: {}
 
+# Who may connect to the bot's port. On a cluster that enforces
+# NetworkPolicy, a pod no policy selects accepts any pod's connections, and a
+# caller that skips the buffering ingress can hold every webhook read slot
+# with idle uploads. List, as NetworkPolicy peers, the ingress controller that
+# forwards /webhooks and the callers of POST /closeIssues (the backend). The
+# chart refuses to render while this is enabled and `from` is empty.
+networkPolicy:
+  enabled: true
+  from: []
+  # - namespaceSelector:
+  #     matchLabels:
+  #       kubernetes.io/metadata.name: <ingress controller namespace>
+  # - podSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: <backend name>
+
 # GitHub's webhook deliveries. The Ingress routes only this exact path; every
 # other route, such as POST /closeIssues, stays on the in-cluster Service.
 ingress:

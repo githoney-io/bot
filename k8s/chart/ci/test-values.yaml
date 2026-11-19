@@ -13,3 +13,11 @@ ingress:
   clusterIssuer: letsencrypt
   host: bot.example.com
   tlsSecretName: bot-example-com-tls
+networkPolicy:
+  from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: githoney-backend

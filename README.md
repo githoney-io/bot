@@ -35,9 +35,13 @@ by default and the chart refuses to render without them.
 | `privateKeySecretKey` | The key of that Secret holding the App's PEM private key (default `github-app.pem`). It is mounted as a file and `GITHUB_PRIVATE_KEY_PATH` points at it. |
 | `env` | Extra plain environment variables. |
 | `ingress.*` | `enabled`, `className`, `clusterIssuer`, `host`, `tlsSecretName` and `annotations`; `path` defaults to `/webhooks`. |
+| `networkPolicy.from` | The NetworkPolicy peers allowed to reach the bot's port: the ingress controller that forwards `/webhooks` and the callers of `POST /closeIssues` (the backend). Required while `networkPolicy.enabled` (the default) is true. |
 
-`resources`, `nodeSelector` and `tolerations` take the usual Kubernetes
-shapes. To check a change to the chart:
+The NetworkPolicy keeps other pods on a shared cluster from connecting
+straight to the bot, past the ingress that buffers each request; it only
+takes effect where the cluster enforces NetworkPolicy. `resources`,
+`nodeSelector` and `tolerations` take the usual Kubernetes shapes. To check
+a change to the chart:
 
 ```sh
 helm lint k8s/chart -f k8s/chart/ci/test-values.yaml
