@@ -1,0 +1,79 @@
+# The GitHoney bot: a GitHub App that receives webhooks on POST /webhooks and
+# answers /githoney commands through the GitHoney backend.
+#
+# These defaults are instance-agnostic: no cluster, hostname, backend or image
+# is assumed. What an instance must supply is empty here and `required` in the
+# templates, so a missing value fails at render instead of deploying a
+# half-configured bot.
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/githoney-io/bot
+  # CI tags every image `sha-<short commit>`. Pin a tag and its digest; never
+  # a moving tag.
+  tag: ""
+  digest: ""
+  pullPolicy: IfNotPresent
+
+# Webhooks are delivered straight to the pod, so more replicas would only
+# split deliveries; one is enough.
+replicaCount: 1
+port: 3001
+
+# The GitHub App's ID.
+githubAppId: ""
+# The GitHoney backend API root, e.g. its in-cluster Service URL.
+backendUrl: ""
+# The public website, used for the links the bot posts.
+frontendUrl: ""
+# The tw-bot API root.
+twBotUrl: ""
+
+# Required. A Secret whose keys become environment variables. It holds
+# GITHUB_WEBHOOK_SECRET, BACKEND_API_KEY, TW_SECRET_KEY, API_KEY and SOURCE,
+# and the GitHub App's private key under privateKeySecretKey.
+existingSecret: ""
+# The key of existingSecret holding the App's PEM private key. It is mounted
+# as a file and GITHUB_PRIVATE_KEY_PATH points at it.
+privateKeySecretKey: github-app.pem
+
+# Extra plain environment variables. Leave WEBHOOK_PROXY_URL unset: the smee
+# relay is for local development only.
+env: {}
+
+nodeSelector: {}
+tolerations: []
+resources:
+  requests:
+    cpu: 50m
+    memory: 192Mi
+  limits:
+    memory: 512Mi
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+# The image runs as root and tsx writes its cache under /tmp, so the root
+# filesystem stays writable.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+service:
+  type: ClusterIP
+  port: 3001
+  annotations: {}
+
+# GitHub's webhook deliveries. The Ingress routes only this exact path; every
+# other route, such as POST /closeIssues, stays on the in-cluster Service.
+ingress:
+  enabled: false
+  className: ""
+  clusterIssuer: ""
+  host: ""
+  path: /webhooks
+  tlsSecretName: ""
+  annotations: {}

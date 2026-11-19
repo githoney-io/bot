@@ -1,0 +1,36 @@
+{{- with .Values.ingress }}
+{{- if .enabled }}
+{{- $name := include "githoney-bot.fullname" $ }}
+{{- $host := required "ingress.host is required" .host }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "githoney-bot.labels" $ | nindent 4 }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ required "ingress.clusterIssuer is required" .clusterIssuer }}
+    {{- with .annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ required "ingress.className is required" .className }}
+  rules:
+    - host: {{ $host }}
+      http:
+        paths:
+          # Only the webhook route is public, matched exactly.
+          - path: {{ required "ingress.path is required" .path }}
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $name }}
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - {{ $host }}
+      secretName: {{ required "ingress.tlsSecretName is required" .tlsSecretName }}
+{{- end }}
+{{- end }}

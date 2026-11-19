@@ -1,0 +1,83 @@
+{{- $secret := required "existingSecret is required" .Values.existingSecret }}
+{{- $keyDir := "/etc/githoney-bot" }}
+{{- $env := dict
+  "PORT" .Values.port
+  "GITHUB_APP_ID" (required "githubAppId is required" .Values.githubAppId)
+  "BACKEND_URL" (required "backendUrl is required" .Values.backendUrl)
+  "FRONTEND_URL" (required "frontendUrl is required" .Values.frontendUrl)
+  "TW_BOT_URL" (required "twBotUrl is required" .Values.twBotUrl)
+  "GITHUB_PRIVATE_KEY_PATH" (printf "%s/%s" $keyDir .Values.privateKeySecretKey)
+}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "githoney-bot.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "githoney-bot.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "githoney-bot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "githoney-bot.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: bot
+          image: {{ include "githoney-bot.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port | int }}
+          envFrom:
+            - secretRef:
+                name: {{ $secret }}
+          env:
+            {{- range $key, $value := merge (dict) $env .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | toString | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: github-app-key
+              mountPath: {{ $keyDir }}
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: github-app-key
+          secret:
+            secretName: {{ $secret }}
+            defaultMode: 0440
+            items:
+              - key: {{ required "privateKeySecretKey is required" .Values.privateKeySecretKey }}
+                path: {{ .Values.privateKeySecretKey }}
