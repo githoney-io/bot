@@ -3,11 +3,17 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHmac, generateKeyPairSync } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { request as httpRequest } from "node:http";
 import { AddressInfo, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Server } from "node:http";
+import type { ClientRequest, Server } from "node:http";
+import { gzipSync } from "node:zlib";
+import {
+  WEBHOOK_BODY_LIMIT,
+  WEBHOOK_MAX_INFLIGHT
+} from "../src/config/express";
 
 const SECRET = "test-webhook-secret-0123456789";
 const ENTRY = fileURLToPath(new URL("../src/index.ts", import.meta.url));
@@ -71,6 +77,15 @@ const payload = JSON.stringify({
   comment: { id: 99, body: "/githoney help", user: { login: "alice" } }
 });
 
+// The comment payload padded to exactly `size` bytes.
+const padded = (size: number) => {
+  const base = JSON.stringify({ ...JSON.parse(payload), padding: "" });
+  return JSON.stringify({
+    ...JSON.parse(payload),
+    padding: "x".repeat(size - base.length)
+  });
+};
+
 // The bot reads PORT=0 as unset, so ask the OS for a free port instead.
 const freePort = () =>
   new Promise<string>((resolve) => {
@@ -104,17 +119,30 @@ after(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-const deliver = (signature: string, body = payload) =>
+const deliveryHeaders = (signature: string) => ({
+  "content-type": "application/json",
+  "x-github-event": "issue_comment",
+  "x-github-delivery": "00000000-0000-0000-0000-000000000001",
+  "x-hub-signature-256": signature
+});
+
+const deliver = (
+  signature: string,
+  body: string | Buffer = payload,
+  headers: Record<string, string> = {}
+) =>
   realFetch(`${baseUrl}/webhooks`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-github-event": "issue_comment",
-      "x-github-delivery": "00000000-0000-0000-0000-000000000001",
-      "x-hub-signature-256": signature
-    },
+    headers: { ...deliveryHeaders(signature), ...headers },
     body
   });
+
+const replyPosted = () =>
+  githubCalls.some(
+    (c) =>
+      c.method === "POST" &&
+      c.url.endsWith("/repos/acme/widgets/issues/7/comments")
+  );
 
 test("a signed delivery to /webhooks reaches the comment handler", async () => {
   githubCalls.length = 0;
@@ -138,12 +166,87 @@ test("a delivery with a wrong signature is rejected before any handler", async (
   assert.deepEqual(githubCalls, []);
 });
 
-test("a delivery over GitHub's 25 MB cap is refused before any handler", async () => {
+test("a signed delivery just under the body limit reaches the handler", async () => {
   githubCalls.length = 0;
-  const big = JSON.stringify({ padding: "x".repeat(25 * 1024 * 1024) });
-  const res = await deliver(sign(big, SECRET), big);
+  const body = padded(WEBHOOK_BODY_LIMIT - 4096);
+  const res = await deliver(sign(body, SECRET), body);
+  assert.equal(res.status, 200);
+  assert.ok(replyPosted(), `no reply; GitHub calls: ${githubCalls.length}`);
+});
+
+test("a signed delivery over the body limit is refused before any handler", async () => {
+  githubCalls.length = 0;
+  const body = padded(WEBHOOK_BODY_LIMIT + 1);
+  const res = await deliver(sign(body, SECRET), body);
   assert.equal(res.status, 413);
   assert.deepEqual(githubCalls, []);
+});
+
+test("a gzip-encoded delivery is refused unread", async () => {
+  githubCalls.length = 0;
+  const res = await deliver(sign(payload, SECRET), gzipSync(payload), {
+    "content-encoding": "gzip"
+  });
+  assert.equal(res.status, 415);
+  assert.deepEqual(githubCalls, []);
+});
+
+test("a body-parser error is answered as JSON without a stack trace", async () => {
+  const res = await deliver(sign(payload, SECRET), payload, {
+    "content-type": "application/json; charset=bogus"
+  });
+  assert.equal(res.status, 415);
+  assert.match(res.headers.get("content-type") ?? "", /^application\/json/);
+  const text = await res.text();
+  assert.ok(JSON.parse(text).error, text);
+  assert.doesNotMatch(text, /node_modules|\bat /);
+});
+
+test("deliveries past the concurrent read limit get 503 until a slot frees", async () => {
+  // Hold every read slot with requests whose bodies never finish.
+  const accepted = new Promise<void>((resolve) => {
+    let seen = 0;
+    const onRequest = () => {
+      if (++seen === WEBHOOK_MAX_INFLIGHT) {
+        server.off("request", onRequest);
+        setImmediate(resolve);
+      }
+    };
+    server.on("request", onRequest);
+  });
+  const url = new URL(`${baseUrl}/webhooks`);
+  const pending: ClientRequest[] = [];
+  for (let i = 0; i < WEBHOOK_MAX_INFLIGHT; i++) {
+    const req = httpRequest({
+      host: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      method: "POST",
+      agent: false,
+      headers: {
+        ...deliveryHeaders(sign(payload, SECRET)),
+        "content-length": String(payload.length)
+      }
+    });
+    req.on("error", () => {});
+    req.write(payload.slice(0, 10));
+    pending.push(req);
+  }
+  await accepted;
+
+  githubCalls.length = 0;
+  const refused = await deliver(sign(payload, SECRET));
+  assert.equal(refused.status, 503);
+  assert.deepEqual(githubCalls, []);
+
+  for (const req of pending) req.destroy();
+  let res = await deliver(sign(payload, SECRET));
+  for (let i = 0; i < 50 && res.status === 503; i++) {
+    await new Promise((r) => setTimeout(r, 20));
+    res = await deliver(sign(payload, SECRET));
+  }
+  assert.equal(res.status, 200);
+  assert.ok(replyPosted(), `no reply; GitHub calls: ${githubCalls.length}`);
 });
 
 test("the bot boots with WEBHOOK_PROXY_URL unset", async () => {

@@ -1,20 +1,73 @@
-import express, { RequestHandler } from "express";
+import express, {
+  ErrorRequestHandler,
+  Request,
+  RequestHandler,
+  Response
+} from "express";
 import morgan from "morgan";
 import cors from "cors";
 
-// GitHub caps webhook payloads at 25 MB; anything larger is refused with 413
-// before it is buffered or verified.
-export const WEBHOOK_BODY_LIMIT = "25mb";
+// The subscribed events carry text fields capped at 65,536 characters (issue,
+// pull request and comment bodies) and, on installation events, the list of
+// repositories; 5 MB covers both with room to spare. A request declaring a
+// larger body is refused with 413 unread; a chunked one is read up to the cap.
+export const WEBHOOK_BODY_LIMIT = 5 * 1024 * 1024;
+
+// Bodies read at once on POST /webhooks; further requests get 503 unread.
+// A read holds about three times its size while buffered, so this keeps the
+// route's memory well below the pod's limit.
+export const WEBHOOK_MAX_INFLIGHT = 8;
+
+// Hold one of the route's read slots until the body is consumed or the
+// request ends, whichever comes first.
+const limitInflight = (max: number): RequestHandler => {
+  let inflight = 0;
+  return (req: Request, res: Response, next) => {
+    if (inflight >= max) {
+      res.set("Connection", "close");
+      res.status(503).json({ error: "Too many concurrent deliveries" });
+      return;
+    }
+    inflight++;
+    let held = true;
+    const release = () => {
+      if (held) {
+        held = false;
+        inflight--;
+      }
+    };
+    req.once("end", release);
+    req.once("close", release);
+    res.once("close", release);
+    next();
+  };
+};
+
+// Answer errors as JSON, never with the default HTML page and its stack trace.
+export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const status = Number.isInteger(err?.status) ? err.status : 500;
+  if (status >= 500) console.error(err);
+  res.status(status).json({
+    error: err?.expose ? err.message : "Internal Server Error"
+  });
+};
 
 // Initialize the express engine. GitHub signs the raw request body, so the
-// webhook route reads it as text, within the limit, before the JSON parser.
+// webhook route reads it as text, within the limit and without decoding any
+// content encoding, before the JSON parser.
 const createServer = (webhooks: RequestHandler) => {
   const app: express.Application = express();
 
   app.use(morgan("dev"));
   app.post(
     "/webhooks",
-    express.text({ type: () => true, limit: WEBHOOK_BODY_LIMIT }),
+    limitInflight(WEBHOOK_MAX_INFLIGHT),
+    express.text({
+      type: () => true,
+      limit: WEBHOOK_BODY_LIMIT,
+      inflate: false
+    }),
     webhooks
   );
 

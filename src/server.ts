@@ -1,6 +1,6 @@
 import fs from "fs";
 import figlet from "figlet";
-import createServer from "./config/express";
+import createServer, { errorHandler } from "./config/express";
 import { startBot } from "./adapters";
 import appConfig from "./config/app-config";
 import { closeIssues } from "./endpoint/closeIssues";
@@ -24,6 +24,7 @@ export function startServer(port: number) {
     async (req, res, next) => apiKeyMiddleware(req, res, next),
     async (req, res) => closeIssues(req, res)
   );
+  app.use(errorHandler);
 
   const server = app.listen(port, () => {
     console.log(figlet.textSync("GITHONEY BOT", { font: "Small Keyboard" }));
