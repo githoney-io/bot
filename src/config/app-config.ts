@@ -9,7 +9,7 @@ export interface AppConfig {
   GITHUB_PRIVATE_KEY_PATH: string;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_APP_ID: string;
-  WEBHOOK_PROXY_URL: string;
+  WEBHOOK_PROXY_URL?: string;
   TW_BOT_URL: string;
   TW_SECRET_KEY: string;
   BACKEND_URL: string;
@@ -24,7 +24,8 @@ const envSchema = z.object({
   GITHUB_PRIVATE_KEY_PATH: z.string(),
   GITHUB_WEBHOOK_SECRET: z.string().min(16),
   GITHUB_APP_ID: z.string(),
-  WEBHOOK_PROXY_URL: z.string().url(),
+  // Smee channel for local development; production receives webhooks directly.
+  WEBHOOK_PROXY_URL: z.string().url().optional(),
   TW_BOT_URL: z.string().url(),
   TW_SECRET_KEY: z.string(),
   BACKEND_URL: z.string().url(),
@@ -40,7 +41,7 @@ const nonValidatedAppConfig: AppConfig = {
     (process.env.GITHUB_PRIVATE_KEY_PATH as string) || "githubapp.pem",
   GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET as string,
   GITHUB_APP_ID: process.env.GITHUB_APP_ID as string,
-  WEBHOOK_PROXY_URL: process.env.WEBHOOK_PROXY_URL as string,
+  WEBHOOK_PROXY_URL: process.env.WEBHOOK_PROXY_URL || undefined,
   TW_BOT_URL: process.env.TW_BOT_URL as string,
   TW_SECRET_KEY: process.env.TW_SECRET_KEY as string,
   BACKEND_URL: process.env.BACKEND_URL as string,

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: githoney-bot
+description: The GitHoney GitHub App, which answers /githoney commands and receives GitHub webhooks
+type: application
+# Chart version: this chart. appVersion: not tracked; the image is pinned in
+# the instance values.
+version: 0.1.0
+home: https://github.com/githoney-io/bot
+keywords:
+  - githoney
+  - github-app

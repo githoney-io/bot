@@ -1,0 +1,23 @@
+# Render fixture for helm lint and helm template; not an instance.
+image:
+  tag: sha-0000000
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+githubAppId: "12345"
+backendUrl: http://backend.example.svc.cluster.local:3000
+frontendUrl: https://www.example.com
+twBotUrl: https://tw-bot.example.com
+existingSecret: githoney-bot
+ingress:
+  enabled: true
+  className: nginx
+  clusterIssuer: letsencrypt
+  host: bot.example.com
+  tlsSecretName: bot-example-com-tls
+networkPolicy:
+  from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: githoney-backend

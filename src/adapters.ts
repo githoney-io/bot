@@ -56,7 +56,7 @@ export class GithubFacade {
 }
 
 export type BotParams = {
-  webhookProxyUrl: string;
+  webhookProxyUrl?: string;
   webhookSecret: string;
   githubAppId: string;
   githubPrivateKey: string;
@@ -254,22 +254,24 @@ export function startBot(params: BotParams) {
     }
   });
 
-  const source = new EventSource(params.webhookProxyUrl);
+  if (params.webhookProxyUrl) {
+    const source = new EventSource(params.webhookProxyUrl);
 
-  source.onmessage = (event) => {
-    const webhookEvent = JSON.parse(event.data);
+    source.onmessage = (event) => {
+      const webhookEvent = JSON.parse(event.data);
 
-    app.webhooks
-      .verifyAndReceive({
-        id: webhookEvent["x-request-id"],
-        name: webhookEvent["x-github-event"],
-        signature: webhookEvent["x-hub-signature"],
-        payload: JSON.stringify(webhookEvent.body)
-      })
-      .catch(console.error);
-  };
+      app.webhooks
+        .verifyAndReceive({
+          id: webhookEvent["x-request-id"],
+          name: webhookEvent["x-github-event"],
+          signature: webhookEvent["x-hub-signature"],
+          payload: JSON.stringify(webhookEvent.body)
+        })
+        .catch(console.error);
+    };
+  }
 
   return createNodeMiddleware(app.webhooks, {
-    path: "/webhook"
+    path: "/webhooks"
   });
 }

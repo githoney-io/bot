@@ -1,0 +1,12 @@
+{{ .Chart.Name }} {{ .Chart.Version }}, image {{ .Values.image.tag }}
+
+In-cluster: http://{{ include "githoney-bot.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/
+{{- if .Values.ingress.enabled }}
+Webhooks:   https://{{ .Values.ingress.host }}{{ .Values.ingress.path }}
+
+Set that URL as the GitHub App's webhook URL, then send a ping from the App's
+"Advanced" settings page; a 200 delivery means the signature check passed.
+{{- end }}
+
+Logs:
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "githoney-bot.fullname" . }} -f
