@@ -11,7 +11,7 @@ import cors from "cors";
 // pull request and comment bodies) and, on installation events, the list of
 // repositories; 5 MB covers both with room to spare. A request declaring a
 // larger body gets 413 before any slot is taken; a chunked one is read up to
-// the cap.
+// the cap, then discarded until it ends, holding its slot until the 413.
 export const WEBHOOK_BODY_LIMIT = 5 * 1024 * 1024;
 
 // Bodies read at once on POST /webhooks; further requests get 503 unread.

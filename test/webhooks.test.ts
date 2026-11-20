@@ -180,7 +180,17 @@ const REQUIRED_BODY_SIZE = 5 * 1024 * 1024;
 // rest, so reads in flight must stay within 128 MiB.
 const READ_BUDGET = 128 * 1024 * 1024;
 
-test("the concurrent read limit keeps buffered bodies within the memory budget", () => {
+// GitHub sends deliveries in bursts: the backend's expiry job closes and
+// comments on every expired bounty issue at once, and each issue then yields
+// an issues.closed and an issue_comment.created delivery. A refused delivery
+// is not redelivered, so the route must read the 8 bodies the budget allows.
+const REQUIRED_CONCURRENT_READS = 8;
+
+test("the concurrent read limit admits bursts within the memory budget", () => {
+  assert.ok(
+    WEBHOOK_MAX_INFLIGHT >= REQUIRED_CONCURRENT_READS,
+    `${WEBHOOK_MAX_INFLIGHT} concurrent reads, ${REQUIRED_CONCURRENT_READS} required`
+  );
   assert.ok(
     WEBHOOK_MAX_INFLIGHT * WEBHOOK_BODY_LIMIT * 3 <= READ_BUDGET,
     `${WEBHOOK_MAX_INFLIGHT} reads of ${WEBHOOK_BODY_LIMIT} bytes exceed the budget`
@@ -203,21 +213,26 @@ test("a signed delivery over the body limit is refused before any handler", asyn
   assert.deepEqual(githubCalls, []);
 });
 
-test("a declared oversized body is refused before it is read", async () => {
+// POST /webhooks over its own connection, letting `send` write the body.
+// Resolves with the status; after 5 s it drops the upload and rejects.
+const rawDeliver = (
+  headers: Record<string, string>,
+  send: (req: ClientRequest) => void
+) => {
   const url = new URL(`${baseUrl}/webhooks`);
-  const status = await new Promise<number>((resolve, reject) => {
+  return new Promise<number>((resolve, reject) => {
     const req = httpRequest({
       host: url.hostname,
       port: url.port,
       path: url.pathname,
       method: "POST",
       agent: false,
-      headers: {
-        ...deliveryHeaders(sign(payload, SECRET)),
-        "content-length": String(1024 * 1024 * 1024)
-      }
+      headers
     });
-    const timer = setTimeout(() => reject(new Error("no response")), 5000);
+    const timer = setTimeout(() => {
+      req.destroy();
+      reject(new Error("no response"));
+    }, 5000);
     req.on("response", (res) => {
       clearTimeout(timer);
       res.resume();
@@ -225,8 +240,37 @@ test("a declared oversized body is refused before it is read", async () => {
       req.destroy();
     });
     req.on("error", () => {});
-    req.write(payload);
+    send(req);
   });
+};
+
+test("a chunked delivery over the body limit is refused before any handler", async () => {
+  githubCalls.length = 0;
+  const body = padded(WEBHOOK_BODY_LIMIT + 1);
+  const status = await rawDeliver(
+    {
+      ...deliveryHeaders(sign(body, SECRET)),
+      "transfer-encoding": "chunked"
+    },
+    (req) => {
+      for (let i = 0; i < body.length; i += 1024 * 1024) {
+        req.write(body.slice(i, i + 1024 * 1024));
+      }
+      req.end();
+    }
+  );
+  assert.equal(status, 413);
+  assert.deepEqual(githubCalls, []);
+});
+
+test("a declared oversized body is refused before it is read", async () => {
+  const status = await rawDeliver(
+    {
+      ...deliveryHeaders(sign(payload, SECRET)),
+      "content-length": String(1024 * 1024 * 1024)
+    },
+    (req) => req.write(payload)
+  );
   assert.equal(status, 413);
 });
 
