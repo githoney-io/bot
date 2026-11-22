@@ -1,7 +1,7 @@
 import { GithubFacade } from "../adapters";
 import { callEp, commandErrorHandler } from "../helpers";
 import { CreateBountyParams } from "../interfaces/core.interface";
-import { NETWORK, ONE_DAY_MS } from "../utils/constants";
+import { isMainnet, ONE_DAY_MS } from "../utils/constants";
 import chalk from "chalk";
 import { callTwBot } from "../utils/twBot";
 import appConfig from "../config/app-config";
@@ -20,7 +20,8 @@ export async function createBounty(
   try {
     const { bountyInfo, commentId } = params;
     const { creatorUsername, issueInfo, bountyData } = bountyInfo;
-    const { duration, address, network } = bountyData;
+    const { duration, address } = bountyData;
+    const network = bountyData.network.toLowerCase();
     const { labels, source, number: issueNumber } = issueInfo;
 
     const deadline_ut = duration * ONE_DAY_MS;
@@ -59,7 +60,7 @@ export async function createBounty(
       creator: creatorData,
       organization: orgData,
       repository: repoData,
-      network: network.toLowerCase(),
+      network,
       platform: source.toLowerCase(),
       categories: labels,
       issue: issueInfo.number,
@@ -77,7 +78,7 @@ export async function createBounty(
         bountyId: bounty.id,
         deadline: Date.now() + deadline_ut,
         signUrl,
-        isTestnet: network === NETWORK.PREPROD
+        isTestnet: !isMainnet(network)
       })
     );
 
@@ -88,14 +89,19 @@ export async function createBounty(
       labels: ["githoney-bounty"]
     });
 
-    callTwBot(
-      issueInfo.title,
-      adaAmount,
-      issueInfo.organization,
-      issueInfo.repository,
-      issueInfo.number,
-      duration * 24 * 60 * 60 * 1000
-    );
+    // Only mainnet bounties are announced publicly.
+    if (isMainnet(network)) {
+      callTwBot(
+        issueInfo.title,
+        adaAmount,
+        issueInfo.organization,
+        issueInfo.repository,
+        issueInfo.number,
+        duration * 24 * 60 * 60 * 1000
+      );
+    } else {
+      console.log(`Skipping tweet for ${network} bounty ${bounty.id}`);
+    }
   } catch (e) {
     console.error(chalk.red(`Error creating bounty. ${e}`));
 
